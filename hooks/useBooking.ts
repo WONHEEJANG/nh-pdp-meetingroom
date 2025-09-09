@@ -36,8 +36,56 @@ export const useBooking = () => {
 
   const formatTimeRange = () => {
     if (selectedTimes.length === 0) return '';
+    
     const sorted = [...selectedTimes].sort();
-    return `${sorted[0]} - ${sorted[sorted.length - 1]}`;
+    const timeGroups: string[] = [];
+    let currentGroup: string[] = [];
+    
+    for (let i = 0; i < sorted.length; i++) {
+      const currentTime = sorted[i];
+      const nextTime = sorted[i + 1];
+      
+      // 현재 시간을 그룹에 추가
+      currentGroup.push(currentTime);
+      
+      // 다음 시간이 없거나 연속되지 않으면 그룹 완성
+      if (!nextTime || !isConsecutiveTime(currentTime, nextTime)) {
+        if (currentGroup.length === 1) {
+          // 단일 시간 - 30분 범위로 표시
+          const startTime = currentGroup[0];
+          const endTime = add30Minutes(startTime);
+          timeGroups.push(`${startTime} - ${endTime}`);
+        } else {
+          // 연속된 시간 범위 - 첫 번째 시간부터 마지막 시간+30분까지
+          const startTime = currentGroup[0];
+          const endTime = add30Minutes(currentGroup[currentGroup.length - 1]);
+          timeGroups.push(`${startTime} - ${endTime}`);
+        }
+        currentGroup = [];
+      }
+    }
+    
+    return timeGroups.join(', ');
+  };
+
+  // 30분을 더하는 헬퍼 함수
+  const add30Minutes = (time: string) => {
+    const [hour, min] = time.split(':').map(Number);
+    const totalMinutes = hour * 60 + min + 30;
+    const newHour = Math.floor(totalMinutes / 60);
+    const newMin = totalMinutes % 60;
+    return `${newHour.toString().padStart(2, '0')}:${newMin.toString().padStart(2, '0')}`;
+  };
+
+  // 연속된 시간인지 확인하는 헬퍼 함수
+  const isConsecutiveTime = (time1: string, time2: string) => {
+    const [hour1, min1] = time1.split(':').map(Number);
+    const [hour2, min2] = time2.split(':').map(Number);
+    
+    const minutes1 = hour1 * 60 + min1;
+    const minutes2 = hour2 * 60 + min2;
+    
+    return minutes2 - minutes1 === 30; // 30분 간격
   };
 
   const resetBooking = () => {

@@ -2,7 +2,6 @@ export interface Room {
   id: number;
   name: string;
   capacity: string;
-  location: string;
 }
 
 export interface TimeSlot {

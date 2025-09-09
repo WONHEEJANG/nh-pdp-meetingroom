@@ -29,9 +29,9 @@ const MeetingRoomBooking = () => {
   } = useBooking();
 
   const rooms: Room[] = [
-    { id: 1, name: '회의실 1', capacity: '최대 6명', location: '전략반 앞' },
-    { id: 2, name: '회의실 2', capacity: '최대 8명', location: '기획팀 옆' },
-    { id: 3, name: '회의실 3', capacity: '최대 4명', location: '개발팀 앞' }
+    { id: 1, name: '회의실 1', capacity: '최대 6명'},
+    { id: 2, name: '회의실 2', capacity: '최대 8명'},
+    { id: 3, name: '회의실 3', capacity: '최대 4명'}
   ];
 
   const timeSlots = [

@@ -42,7 +42,7 @@ export const CompletionScreen: React.FC<CompletionScreenProps> = ({
           }}
         >
           <div className="space-y-4">
-            <div className="flex justify-between items-center h-5">
+            <div className="flex justify-between items-center">
               <span 
                 className="text-sm"
                 style={{ 
@@ -61,10 +61,10 @@ export const CompletionScreen: React.FC<CompletionScreenProps> = ({
                   lineHeight: '20px'
                 }}
               >
-                {selectedRoom} (전략반 앞)
+                {selectedRoom}
               </span>
             </div>
-            <div className="flex justify-between items-center h-5">
+            <div className="flex justify-between items-center">
               <span 
                 className="text-sm"
                 style={{ 
@@ -86,9 +86,9 @@ export const CompletionScreen: React.FC<CompletionScreenProps> = ({
                 {selectedDate}
               </span>
             </div>
-            <div className="flex justify-between items-center h-5">
+            <div className="flex items-start">
               <span 
-                className="text-sm"
+                className="text-sm w-12 flex-shrink-0"
                 style={{ 
                   color: '#505050',
                   fontSize: '15px',
@@ -98,11 +98,13 @@ export const CompletionScreen: React.FC<CompletionScreenProps> = ({
                 시간
               </span>
               <span 
-                className="font-medium text-sm"
+                className="font-medium text-sm text-right flex-1"
                 style={{ 
                   color: '#121212',
                   fontSize: '15px',
-                  lineHeight: '20px'
+                  lineHeight: '20px',
+                  wordBreak: 'normal',
+                  overflowWrap: 'break-word'
                 }}
               >
                 {timeRange}
