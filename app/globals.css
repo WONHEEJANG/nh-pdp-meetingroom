@@ -1,57 +1,150 @@
+@import './base.css';
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* Custom scrollbar styles */
-.scrollbar-hide {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
+/* 모바일 웹 스크롤 방지 */
+html, body {
+  overflow-x: hidden;
+  width: 100%;
+  max-width: 100%;
+  overscroll-behavior-y: none;
+  -webkit-overflow-scrolling: touch;
 }
 
-.scrollbar-hide::-webkit-scrollbar {
-  display: none;
+#__next {
+  overflow-x: hidden;
+  width: 100%;
+  max-width: 100%;
+  overscroll-behavior-y: none;
 }
 
-/* Mobile-specific styles */
-@layer base {
-  html {
-    -webkit-text-size-adjust: 100%;
-    -webkit-tap-highlight-color: transparent;
-  }
-  
-  body {
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-  }
-}
-
-/* Custom component styles */
+/* Figma Design System 기반 컴포넌트 스타일 */
 @layer components {
+  /* 버튼 컴포넌트 */
   .btn-primary {
-    @apply py-4 bg-green-600 text-white rounded-xl font-medium text-lg disabled:bg-gray-300 transition-colors;
+    @apply py-4 px-6 bg-green-500 text-white rounded-xl font-medium text-lg disabled:bg-gray-300 transition-colors touch-feedback;
+    background-color: var(--color-green-500);
+    color: var(--color-white);
+    height: 56px;
+    min-height: 44px;
   }
   
   .btn-secondary {
-    @apply py-4 px-6 bg-white border border-gray-300 text-gray-900 rounded-xl font-medium transition-colors;
+    @apply py-4 px-6 bg-white text-gray-900 rounded-xl font-medium transition-colors touch-feedback;
+    background-color: var(--color-white);
+    border: 1px solid var(--color-gray-300);
+    color: var(--color-gray-900);
+    height: 56px;
+    min-height: 44px;
   }
   
+  /* 카드 컴포넌트 */
   .card {
     @apply bg-white border border-gray-200 rounded-2xl p-6;
+    background-color: var(--color-white);
+    border-color: var(--color-gray-200);
   }
   
+  /* 시간 슬롯 컴포넌트 */
   .time-slot {
     @apply flex-1 py-2 px-3 rounded-full text-sm font-medium transition-colors;
-  }
-  
-  .time-slot-selected {
-    @apply bg-gray-900 text-white;
-  }
-  
-  .time-slot-disabled {
-    @apply bg-gray-100 text-gray-400 cursor-not-allowed;
+    font-family: var(--font-pretendard);
+    height: 30px;
+    min-width: 64px;
   }
   
   .time-slot-available {
-    @apply bg-white border border-gray-300 text-gray-900 hover:bg-gray-50;
+    background-color: var(--color-white);
+    color: var(--color-gray-900);
+    border: 1px solid var(--color-gray-200);
+  }
+  
+  .time-slot-selected {
+    background-color: var(--color-gray-900);
+    color: var(--color-white);
+  }
+  
+  .time-slot-disabled {
+    background-color: var(--color-gray-100);
+    color: var(--color-gray-400);
+    cursor: not-allowed;
+  }
+  
+  .time-slot-available:hover {
+    background-color: var(--color-gray-50);
+  }
+  
+  /* 헤더 컴포넌트 */
+  .header {
+    background-color: var(--color-white);
+    /* border-bottom: 1px solid var(--color-gray-100); */
+  }
+  
+  /* 바텀시트 컴포넌트 */
+  .bottom-sheet {
+    background-color: var(--color-white);
+    border-top-left-radius: var(--radius-2xl);
+    border-top-right-radius: var(--radius-2xl);
+  }
+  
+  /* 예약 요약 카드 */
+  .booking-summary {
+    background-color: var(--color-white);
+    border: 1px solid var(--color-gray-200);
+    border-radius: var(--radius-2xl);
+  }
+  
+  /* 가이드라인 아이템 */
+  .guideline-item {
+    color: var(--color-gray-600);
+    font-family: var(--font-pretendard);
+  }
+  
+  /* 공유 버튼 */
+  .share-button {
+    background-color: var(--color-white);
+    border: 1px solid var(--color-gray-200);
+    border-radius: var(--radius-full);
+  }
+  
+  /* 성공 아이콘 배경 */
+  .success-icon-bg {
+    background-color: var(--color-green-100);
+  }
+  
+  /* 성공 아이콘 */
+  .success-icon {
+    color: var(--color-green-600);
+  }
+
+  /* 모바일 터치 최적화 */
+  .touch-target {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* 터치 피드백 */
+  .touch-feedback {
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  /* 스크롤 최적화 */
+  .scroll-smooth {
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
+  }
+
+  /* 스크롤바 숨기기 */
+  .hide-scrollbar {
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+  }
+
+  .hide-scrollbar::-webkit-scrollbar {
+    display: none;  /* Chrome, Safari and Opera */
   }
 }
