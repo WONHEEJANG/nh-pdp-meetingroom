@@ -1,0 +1,57 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom scrollbar styles */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* Mobile-specific styles */
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+    -webkit-tap-highlight-color: transparent;
+  }
+  
+  body {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
+
+/* Custom component styles */
+@layer components {
+  .btn-primary {
+    @apply py-4 bg-green-600 text-white rounded-xl font-medium text-lg disabled:bg-gray-300 transition-colors;
+  }
+  
+  .btn-secondary {
+    @apply py-4 px-6 bg-white border border-gray-300 text-gray-900 rounded-xl font-medium transition-colors;
+  }
+  
+  .card {
+    @apply bg-white border border-gray-200 rounded-2xl p-6;
+  }
+  
+  .time-slot {
+    @apply flex-1 py-2 px-3 rounded-full text-sm font-medium transition-colors;
+  }
+  
+  .time-slot-selected {
+    @apply bg-gray-900 text-white;
+  }
+  
+  .time-slot-disabled {
+    @apply bg-gray-100 text-gray-400 cursor-not-allowed;
+  }
+  
+  .time-slot-available {
+    @apply bg-white border border-gray-300 text-gray-900 hover:bg-gray-50;
+  }
+}
