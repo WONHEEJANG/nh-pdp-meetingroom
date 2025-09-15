@@ -3,7 +3,7 @@
 import React, { useState } from 'react'
 
 interface CalendarProps {
-  selectedDate?: Date
+  selectedDate?: Date | null
   onDateSelect?: (date: Date) => void
 }
 
