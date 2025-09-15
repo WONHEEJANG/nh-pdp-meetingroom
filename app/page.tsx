@@ -1,113 +1,117 @@
 'use client'
 
-import React from 'react';
-import { useBooking } from '../hooks/useBooking';
-import { TimeSelectionScreen } from '../components/screens/TimeSelectionScreen';
-import { ConfirmationScreen } from '../components/screens/ConfirmationScreen';
-import { CompletionScreen } from '../components/screens/CompletionScreen';
-import { RoomSelectionSheet } from '../components/RoomSelectionSheet';
-import { DateSelectionSheet } from '../components/DateSelectionSheet';
-import { Room } from '../types';
+import React, { useState } from 'react'
+import Header from '@/components/Header'
+import Calendar from '@/components/Calendar'
+import RoomTabs from '@/components/RoomTabs'
+import RoomInfo from '@/components/RoomInfo'
+import TimeSlotGrid from '@/components/TimeSlotGrid'
+import ActionButtons from '@/components/ActionButtons'
 
-const MeetingRoomBooking = () => {
-  const {
-    currentStep,
-    setCurrentStep,
-    selectedRoom,
-    setSelectedRoom,
-    selectedDate,
-    setSelectedDate,
-    selectedTimes,
-    showRoomSheet,
-    setShowRoomSheet,
-    showDateSheet,
-    setShowDateSheet,
-    toggleTimeSelection,
-    getTimeSlotStatus,
-    formatTimeRange,
-    resetBooking,
-  } = useBooking();
+export default function Home() {
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null) // 초기에는 선택된 날짜 없음
+  const [selectedRoom, setSelectedRoom] = useState<number>(1)
+  const [selectedTimeSlots, setSelectedTimeSlots] = useState<string[]>([])
 
-  const rooms: Room[] = [
-    { id: 1, name: '회의실 1', capacity: '최대 6명'},
-    { id: 2, name: '회의실 2', capacity: '최대 8명'},
-    { id: 3, name: '회의실 3', capacity: '최대 4명'}
-  ];
+  const handleDateSelect = (date: Date) => {
+    setSelectedDate(date)
+    
+    // 회의실 탭으로 스크롤 애니메이션
+    setTimeout(() => {
+      const roomTabsElement = document.getElementById('room-tabs')
+      if (roomTabsElement) {
+        roomTabsElement.scrollIntoView({ 
+          behavior: 'smooth', 
+          block: 'start' 
+        })
+      }
+    }, 100)
+  }
 
-  const timeSlots = [
-    ['09:00', '09:30', '10:00', '10:30'],
-    ['11:00', '11:30', '12:00', '12:30'],
-    ['13:00', '13:30', '14:00', '14:30'],
-    ['15:00', '15:30', '16:00', '16:30'],
-    ['17:00', '17:30', '18:00', '18:30']
-  ];
+  const handleRoomSelect = (roomNumber: number) => {
+    setSelectedRoom(roomNumber)
+  }
 
-  const handleRoomSelect = () => setShowRoomSheet(true);
-  const handleDateSelect = () => setShowDateSheet(true);
-  const handleRoomChange = (roomName: string) => setSelectedRoom(roomName);
-  const handleNext = () => setCurrentStep('confirmation');
-  const handleConfirm = () => setCurrentStep('completion');
-  const handleEdit = () => setCurrentStep('timeSelection');
-  const handleComplete = () => resetBooking();
+  const handleTimeSlotSelect = (time: string) => {
+    setSelectedTimeSlots(prev => {
+      if (prev.includes(time)) {
+        return prev.filter(t => t !== time)
+      } else {
+        return [...prev, time].sort()
+      }
+    })
+  }
+
+  const handleBack = () => {
+    console.log('뒤로가기')
+  }
+
+  const handleHome = () => {
+    console.log('홈')
+  }
+
+  const handleMenu = () => {
+    console.log('메뉴')
+  }
+
+  const handleCancel = () => {
+    console.log('예약취소')
+    setSelectedTimeSlots([])
+  }
+
+  const handleConfirm = () => {
+    console.log('예약하기', {
+      date: selectedDate,
+      room: selectedRoom,
+      timeSlots: selectedTimeSlots
+    })
+  }
 
   return (
-    <>
-      {/* 바닥화면 */}
-      <div className="max-w-md mx-auto bg-gray-100 min-h-screen overflow-x-hidden w-full">
-        {currentStep === 'timeSelection' && (
-          <TimeSelectionScreen
+    <div className="min-h-screen bg-white w-full max-w-md mx-auto px-6 pt-[50px] pb-32">
+      {/* Header */}
+      <Header 
+        onBack={handleBack}
+        onHome={handleHome}
+        onMenu={handleMenu}
+      />
+
+      {/* Main Content */}
+      <div className="flex flex-col">
+        {/* Calendar */}
+        <Calendar 
+          selectedDate={selectedDate}
+          onDateSelect={handleDateSelect}
+        />
+
+        {/* Room Tabs */}
+        <div id="room-tabs">
+          <RoomTabs 
             selectedRoom={selectedRoom}
-            selectedDate={selectedDate}
-            selectedTimes={selectedTimes}
-            timeSlots={timeSlots}
             onRoomSelect={handleRoomSelect}
-            onDateSelect={handleDateSelect}
-            onTimeToggle={toggleTimeSelection}
-            getTimeSlotStatus={getTimeSlotStatus}
-            onNext={handleNext}
           />
-        )}
-        {currentStep === 'confirmation' && (
-          <ConfirmationScreen
-            selectedRoom={selectedRoom}
-            selectedDate={selectedDate}
-            timeRange={formatTimeRange()}
-            onBack={handleEdit}
-            onConfirm={handleConfirm}
-            onEdit={handleEdit}
-          />
-        )}
-        {currentStep === 'completion' && (
-          <CompletionScreen
-            selectedRoom={selectedRoom}
-            selectedDate={selectedDate}
-            timeRange={formatTimeRange()}
-            onComplete={handleComplete}
-          />
-        )}
+        </div>
+
+        {/* Room Info */}
+        <RoomInfo 
+          capacity={10}
+          features={['영상기기 연결 지원']}
+        />
+
+        {/* Time Slot Grid */}
+        <TimeSlotGrid 
+          selectedSlots={selectedTimeSlots}
+          onSlotSelect={handleTimeSlotSelect}
+        />
+
       </div>
 
-      {/* 검은 오버레이 - 바텀시트가 열릴 때만 표시 */}
-      <div className={`fixed inset-0 bg-black transition-opacity duration-300 z-40 ${
-        showRoomSheet || showDateSheet ? 'opacity-60' : 'opacity-0 pointer-events-none'
-      }`} />
-
-      {/* 바텀시트 - 독립적으로 렌더링 */}
-      <RoomSelectionSheet
-        isOpen={showRoomSheet}
-        onClose={() => setShowRoomSheet(false)}
-        rooms={rooms}
-        selectedRoom={selectedRoom}
-        onRoomSelect={handleRoomChange}
+      {/* Action Buttons - Fixed at bottom */}
+      <ActionButtons 
+        onCancel={handleCancel}
+        onConfirm={handleConfirm}
+        disabled={!selectedDate || selectedTimeSlots.length === 0}
       />
-
-      <DateSelectionSheet
-        isOpen={showDateSheet}
-        onClose={() => setShowDateSheet(false)}
-        onDateSelect={setSelectedDate}
-      />
-    </>
-  );
-};
-
-export default MeetingRoomBooking;
+    </div>
+  )
+}

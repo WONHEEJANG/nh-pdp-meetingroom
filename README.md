@@ -1,107 +1,68 @@
-# NH 회의실 예약 시스템
+# 회의실 예약 시스템
 
-피그마 디자인을 기반으로 구현한 모바일 웹 회의실 예약 애플리케이션입니다.
+피그마 디자인을 기반으로 개발된 모바일 웹 회의실 예약 시스템입니다.
 
-## 🚀 기술 스택
+## 🚀 시작하기
 
-- **Framework**: Next.js 14 (App Router)
-- **Language**: TypeScript
-- **Styling**: Tailwind CSS
-- **Icons**: Lucide React
-- **Deployment**: Vercel
-
-## 📱 주요 기능
-
-- 회의실 선택 및 예약
-- 날짜 및 시간 선택
-- 예약 확인 및 확정
-- 모바일 최적화 UI/UX
-- PWA 지원
-
-## 🛠️ 개발 환경 설정
-
-### 1. 의존성 설치
+### 설치
 
 ```bash
 npm install
 ```
 
-### 2. 개발 서버 실행
+### 개발 서버 실행
 
 ```bash
 npm run dev
 ```
 
-개발 서버가 [http://localhost:3000](http://localhost:3000)에서 실행됩니다.
+브라우저에서 [http://localhost:3000](http://localhost:3000)을 열어 확인하세요.
 
-### 3. 빌드
+## 📱 주요 기능
 
-```bash
-npm run build
-```
-
-### 4. 프로덕션 서버 실행
-
-```bash
-npm start
-```
-
-## 📦 배포
-
-### Vercel 배포
-
-1. GitHub에 코드를 푸시합니다.
-2. [Vercel](https://vercel.com)에 로그인합니다.
-3. 새 프로젝트를 생성하고 GitHub 저장소를 연결합니다.
-4. 자동으로 빌드 및 배포가 진행됩니다.
-
-### 수동 배포
-
-```bash
-npm run build
-```
-
-빌드된 파일은 `out` 폴더에 생성됩니다.
-
-## 📱 모바일 최적화
-
-- 반응형 디자인 (최대 너비 448px)
-- 터치 친화적 UI
-- PWA 지원 (홈 화면에 추가 가능)
-- 모바일 브라우저 최적화
+- **반응형 디자인**: 모바일 기기에 최적화된 UI/UX
+- **날짜 선택**: 캘린더를 통한 직관적인 날짜 선택
+- **회의실 선택**: 탭을 통한 회의실 선택
+- **시간 선택**: 30분 단위 시간 슬롯 선택
+- **실시간 상태 표시**: 예약 가능/불가능/선택 상태 시각화
 
 ## 🎨 디자인 시스템
 
-- **Primary Color**: Green (#16a34a)
-- **Typography**: 시스템 폰트
-- **Spacing**: Tailwind CSS 기본 스페이싱
-- **Components**: 재사용 가능한 컴포넌트 클래스
+- **폰트**: Pretendard
+- **컬러 팔레트**: 
+  - Primary: #19973c (초록)
+  - Text: #121212 (검정)
+  - Gray: #505050, #767676, #929292
+  - Red: #ec0c0c (일요일)
+  - Blue: #2c6dd4 (토요일)
 
-## 📂 프로젝트 구조
+## 🛠 기술 스택
+
+- **Framework**: Next.js 14
+- **Language**: TypeScript
+- **Styling**: Tailwind CSS
+- **Font**: Pretendard
+
+## 📱 모바일 최적화
+
+- 터치 친화적인 버튼 크기 (최소 44px)
+- iOS Safari viewport 높이 문제 해결
+- 부드러운 스크롤링
+- 터치 하이라이트 제거
+- 반응형 텍스트 크기
+
+## 🏗 컴포넌트 구조
 
 ```
-├── app/
-│   ├── globals.css          # 전역 스타일
-│   ├── layout.tsx           # 루트 레이아웃
-│   └── page.tsx             # 메인 페이지
-├── public/
-│   └── manifest.json        # PWA 매니페스트
-├── next.config.js           # Next.js 설정
-├── tailwind.config.js       # Tailwind CSS 설정
-├── tsconfig.json            # TypeScript 설정
-└── vercel.json              # Vercel 배포 설정
+components/
+├── Header.tsx          # 상단 헤더
+├── Calendar.tsx        # 캘린더 컴포넌트
+├── RoomTabs.tsx        # 회의실 탭
+├── RoomInfo.tsx        # 회의실 정보
+├── TimeSlotGrid.tsx    # 시간 선택 그리드
+└── ActionButtons.tsx   # 하단 액션 버튼
 ```
-
-## 🔧 커스터마이징
-
-### 색상 변경
-
-`tailwind.config.js`에서 색상 팔레트를 수정할 수 있습니다.
-
-### 컴포넌트 스타일
-
-`app/globals.css`의 `@layer components` 섹션에서 컴포넌트 스타일을 수정할 수 있습니다.
 
 ## 📄 라이선스
 
-이 프로젝트는 MIT 라이선스 하에 있습니다.
+MIT License
