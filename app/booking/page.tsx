@@ -56,8 +56,14 @@ export default function BookingPage() {
     if (reserverElement) {
       reserverElement.scrollIntoView({ 
         behavior: 'smooth', 
-        block: 'start' 
+        block: 'start',
+        inline: 'nearest'
       })
+      // Fixed header height is 50px. Adjust scroll position after scrolling.
+      // Using setTimeout to ensure scrollIntoView has initiated before adjusting.
+      setTimeout(() => {
+        window.scrollBy(0, 100)
+      }, 100); // A small delay to allow smooth scroll to start
     }
   }
 
@@ -74,7 +80,17 @@ export default function BookingPage() {
         password
       }
     })
-    // 여기서 실제 예약 API 호출
+    
+    // Navigate to completion page with form data
+    const params = new URLSearchParams({
+      reserverName: reserverName || '김농협',
+      purpose: selectedPurposes.length > 0 ? selectedPurposes.join(', ') : '팀 회의',
+      room: bookingData.room,
+      date: bookingData.date,
+      time: bookingData.time
+    })
+
+    router.push(`/completion?${params.toString()}`)
   }
 
   return (
@@ -171,8 +187,8 @@ export default function BookingPage() {
         </div>
 
         {/* 예약자 입력 */}
-        <div id="reserver-section" className="mb-6">
-          <div className="mb-2">
+        <div className="mb-6">
+          <div id="reserver-section" className="mb-2">
             <span 
               className="text-[#505050]"
               style={{ fontFamily: 'Pretendard', fontWeight: 500, fontSize: '14px', letterSpacing: '-0.28px', lineHeight: '22px' }}
@@ -273,20 +289,20 @@ export default function BookingPage() {
           {/* Divider */}
           <div className="w-full bg-[#f6f6f6]" style={{ height: '8px', marginLeft: '-24px', marginRight: '-24px', width: 'calc(100% + 48px)' }}></div>
           <div className="pt-4">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-2">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <circle cx="12" cy="12" r="10" stroke="#121212" strokeWidth="1.5"/>
-                  <path d="M12 16V12" stroke="#121212" strokeWidth="1.5" strokeLinecap="round"/>
-                  <circle cx="12" cy="8" r="1" fill="#121212"/>
-                </svg>
-                <span 
-                  className="text-[#121212]"
-                  style={{ fontFamily: 'Pretendard', fontWeight: 600, fontSize: '16px', letterSpacing: '-0.32px', lineHeight: '24px' }}
-                >
-                  알아두세요
-                </span>
-              </div>
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-2">
+                      <img 
+                        src="/icon/24/line/system/ico_notice_line_24.svg" 
+                        alt="알아두세요" 
+                        className="w-6 h-6"
+                      />
+                      <span
+                        className="text-[#121212]"
+                        style={{ fontFamily: 'Pretendard', fontWeight: 600, fontSize: '16px', letterSpacing: '-0.32px', lineHeight: '24px' }}
+                      >
+                        알아두세요
+                      </span>
+                    </div>
               <button 
                 onClick={toggleNotice}
                 className="w-6 h-6 flex items-center justify-center transition-transform duration-200"
