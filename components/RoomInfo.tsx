@@ -3,20 +3,37 @@
 import React from 'react'
 
 interface RoomInfoProps {
-  capacity: number
-  features: string[]
+  selectedRoom: number
 }
 
-const RoomInfo: React.FC<RoomInfoProps> = ({ capacity, features }) => {
+const RoomInfo: React.FC<RoomInfoProps> = ({ selectedRoom }) => {
+  // 각 회의실별 정보 정의
+  const roomData = {
+    1: {
+      capacity: 10,
+      features: ['영상기기 연결 지원', '화이트보드', '프로젝터']
+    },
+    2: {
+      capacity: 6,
+      features: ['영상기기 연결 지원', '화이트보드']
+    },
+    3: {
+      capacity: 4,
+      features: ['영상기기 연결 지원', '소형 회의용']
+    }
+  }
+
+  const currentRoom = roomData[selectedRoom as keyof typeof roomData]
+
   return (
     <div className="w-full" style={{ paddingTop: '16px', paddingBottom: '16px' }}>
       {/* Info Box */}
       <div className="w-full bg-[#f6f6f6] rounded-2xl p-4 mb-6 flex items-center" style={{ height: '62px' }}>
         <p 
           className="text-[#505050]"
-          style={{ fontFamily: 'Pretendard', fontWeight: 400, fontSize: '14px', letterSpacing: '-0.28px', lineHeight: '22px' }}
+          style={{ fontFamily: 'Pretendard', fontWeight: 400, fontSize: '14px', letterSpacing: '-0.28px', lineHeight: '22px', wordBreak: 'keep-all' }}
         >
-          수용인원 최대 {capacity}명, {features.join(', ')}
+          수용인원 최대 {currentRoom.capacity}명, {currentRoom.features.join(', ')}
         </p>
       </div>
 

@@ -16,16 +16,37 @@ const CompletionPage: React.FC = () => {
   const searchParams = useSearchParams()
 
   const completionData: CompletionData = {
-    reserverName: searchParams.get('reserverName') || '김농협',
-    purpose: searchParams.get('purpose') || '팀 회의',
-    room: searchParams.get('room') || '회의실 1',
-    date: searchParams.get('date') || '2025. 9. 8.',
-    time: searchParams.get('time') || '15:30 - 17:30'
+    reserverName: searchParams.get('reserverName') || '-',
+    purpose: searchParams.get('purpose') || '-',
+    room: searchParams.get('room') || '-',
+    date: searchParams.get('date') || '-',
+    time: searchParams.get('time') || '-'
   }
 
   // Scroll to top on component mount
   useEffect(() => {
     window.scrollTo(0, 0)
+  }, [])
+
+  // Prevent back button on Android
+  useEffect(() => {
+    const handlePopState = (event: PopStateEvent) => {
+      // Prevent default back behavior
+      event.preventDefault()
+      // Push current state to prevent back navigation
+      window.history.pushState(null, '', window.location.href)
+    }
+
+    // Add event listener
+    window.addEventListener('popstate', handlePopState)
+    
+    // Push initial state to prevent back navigation
+    window.history.pushState(null, '', window.location.href)
+
+    // Cleanup
+    return () => {
+      window.removeEventListener('popstate', handlePopState)
+    }
   }, [])
 
   const handleShare = () => {

@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
+import { reservationService } from '@/lib/supabase'
 
 interface BookingData {
   room: string
@@ -21,9 +22,9 @@ export default function BookingPage() {
 
   // URL에서 예약 데이터 가져오기
   const bookingData: BookingData = {
-    room: searchParams.get('room') || '회의실 1',
-    date: searchParams.get('date') || '2025. 9. 8.',
-    time: searchParams.get('time') || '15:30 - 17:30'
+    room: searchParams.get('room') || '-',
+    date: searchParams.get('date') || '-',
+    time: searchParams.get('time') || '-'
   }
 
   // 컴포넌트 마운트 시 스크롤을 맨 위로 초기화
@@ -71,26 +72,44 @@ export default function BookingPage() {
     router.back()
   }
 
-  const handleSubmit = () => {
-    console.log('예약 완료', {
-      bookingData,
-      formData: {
-        reserverName,
-        purpose: selectedPurposes,
-        password
+  const handleSubmit = async () => {
+    try {
+      console.log('예약 완료', {
+        bookingData,
+        formData: {
+          reserverName,
+          purpose: selectedPurposes,
+          password
+        }
+      })
+      
+      // Save to Supabase
+      const reservationData = {
+        reserver_name: reserverName || '김농협',
+        purpose: purpose || '팀 회의',
+        room: bookingData.room,
+        date: bookingData.date,
+        time: bookingData.time,
+        password: password
       }
-    })
-    
-    // Navigate to completion page with form data
-    const params = new URLSearchParams({
-      reserverName: reserverName || '김농협',
-      purpose: selectedPurposes.length > 0 ? selectedPurposes.join(', ') : '팀 회의',
-      room: bookingData.room,
-      date: bookingData.date,
-      time: bookingData.time
-    })
 
-    router.push(`/completion?${params.toString()}`)
+      const savedReservation = await reservationService.createReservation(reservationData)
+      console.log('✅ Reservation saved:', savedReservation)
+      
+      // Navigate to completion page with form data
+      const params = new URLSearchParams({
+        reserverName: reserverName || '김농협',
+        purpose: purpose || '팀 회의', // 인풋필드의 실제 텍스트 사용
+        room: bookingData.room,
+        date: bookingData.date,
+        time: bookingData.time
+      })
+
+      router.push(`/completion?${params.toString()}`)
+    } catch (error) {
+      console.error('❌ Error saving reservation:', error)
+      alert('예약 저장 중 오류가 발생했습니다. 다시 시도해주세요.')
+    }
   }
 
   return (
@@ -196,17 +215,17 @@ export default function BookingPage() {
               예약자
             </span>
           </div>
-          <div className="w-full bg-white border border-[#e1e1e1] rounded-xl" style={{ height: '54px', paddingLeft: '20px', paddingRight: '20px' }}>
-            <input
-              type="text"
-              value={reserverName}
-              onChange={(e) => setReserverName(e.target.value)}
-              onFocus={scrollToReserver}
-              placeholder="김농협"
-              className="w-full h-full text-[#121212] placeholder-[#929292] focus:outline-none"
-              style={{ fontFamily: 'Pretendard', fontWeight: 500, fontSize: '18px', letterSpacing: '-0.36px', lineHeight: '26px' }}
-            />
-          </div>
+                 <div className="w-full bg-white border border-[#e1e1e1] rounded-xl" style={{ height: '54px', paddingLeft: '20px', paddingRight: '20px' }}>
+                   <input
+                     type="text"
+                     value={reserverName}
+                     onChange={(e) => setReserverName(e.target.value)}
+                     onFocus={scrollToReserver}
+                     placeholder="김농협"
+                     className="w-full h-full text-[#121212] placeholder-[#929292] focus:outline-none bg-white"
+                     style={{ fontFamily: 'Pretendard', fontWeight: 500, fontSize: '18px', letterSpacing: '-0.36px', lineHeight: '26px' }}
+                   />
+                 </div>
         </div>
 
         {/* 사용 목적 입력 */}
@@ -219,16 +238,16 @@ export default function BookingPage() {
               사용 목적
             </span>
           </div>
-          <div className="w-full bg-white border border-[#e1e1e1] rounded-xl" style={{ height: '54px', paddingLeft: '20px', paddingRight: '20px' }}>
-            <input
-              type="text"
-              value={purpose}
-              onChange={(e) => setPurpose(e.target.value)}
-              placeholder="팀 회의"
-              className="w-full h-full text-[#121212] placeholder-[#929292] focus:outline-none"
-              style={{ fontFamily: 'Pretendard', fontWeight: 500, fontSize: '18px', letterSpacing: '-0.36px', lineHeight: '26px' }}
-            />
-          </div>
+                 <div className="w-full bg-white border border-[#e1e1e1] rounded-xl" style={{ height: '54px', paddingLeft: '20px', paddingRight: '20px' }}>
+                   <input
+                     type="text"
+                     value={purpose}
+                     onChange={(e) => setPurpose(e.target.value)}
+                     placeholder="팀 회의"
+                     className="w-full h-full text-[#121212] placeholder-[#929292] focus:outline-none bg-white"
+                     style={{ fontFamily: 'Pretendard', fontWeight: 500, fontSize: '18px', letterSpacing: '-0.36px', lineHeight: '26px' }}
+                   />
+                 </div>
           
           {/* 선택된 목적들 */}
           <div className="flex flex-wrap gap-2 mt-4">
@@ -266,16 +285,18 @@ export default function BookingPage() {
               비밀번호
             </span>
           </div>
-          <div className="w-full bg-white border border-[#e1e1e1] rounded-xl" style={{ height: '54px', paddingLeft: '20px', paddingRight: '20px' }}>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="4자리 숫자 입력"
-              className="w-full h-full text-[#121212] placeholder-[#929292] focus:outline-none"
-              style={{ fontFamily: 'Pretendard', fontWeight: 500, fontSize: '18px', letterSpacing: '-0.36px', lineHeight: '26px' }}
-            />
-          </div>
+                 <div className="w-full bg-white border border-[#e1e1e1] rounded-xl" style={{ height: '54px', paddingLeft: '20px', paddingRight: '20px' }}>
+                   <input
+                     type="password"
+                     value={password}
+                     onChange={(e) => setPassword(e.target.value)}
+                     placeholder="4자리 숫자 입력"
+                     inputMode="numeric"
+                     pattern="[0-9]*"
+                     className="w-full h-full text-[#121212] placeholder-[#929292] focus:outline-none bg-white"
+                     style={{ fontFamily: 'Pretendard', fontWeight: 500, fontSize: '18px', letterSpacing: '-0.36px', lineHeight: '26px' }}
+                   />
+                 </div>
           <p 
             className="text-[#767676] mt-2"
             style={{ fontFamily: 'Pretendard', fontWeight: 400, fontSize: '13px', letterSpacing: '-0.26px', lineHeight: '20px' }}

@@ -158,8 +158,6 @@ const Calendar: React.FC<CalendarProps> = ({ selectedDate, onDateSelect }) => {
               onClick={() => handleDateClick(day)}
               className={`flex-1 max-w-[36px] mx-auto rounded-2xl flex items-center justify-center touch-manipulation ${
                 day.isSelected
-                  ? 'bg-[#19973c] text-white'
-                  : day.isToday
                   ? 'bg-[#121212] text-white font-semibold'
                   : day.isCurrentMonth
                   ? 'text-[#121212] hover:bg-gray-100 active:bg-gray-200'

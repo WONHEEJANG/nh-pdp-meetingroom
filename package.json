@@ -3,15 +3,18 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "@supabase/supabase-js": "^2.57.4",
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
     "autoprefixer": "^10.4.21",
+    "dotenv": "^17.2.2",
     "next": "14.0.4",
     "postcss": "^8.5.6",
     "react": "^18",
     "react-dom": "^18",
     "tailwindcss": "^4.1.13",
+    "tsx": "^4.20.5",
     "typescript": "^5"
   },
   "scripts": {
@@ -19,13 +22,15 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "export": "next build && next export"
+    "export": "next build && next export",
+    "seed": "tsx scripts/seed-data.ts",
+    "create-table": "tsx scripts/create-table.ts"
   },
   "devDependencies": {
+    "autoprefixer": "^10.4.16",
     "eslint": "^8",
     "eslint-config-next": "14.0.4",
-    "tailwindcss": "^3.3.0",
     "postcss": "^8.4.31",
-    "autoprefixer": "^10.4.16"
+    "tailwindcss": "^3.3.0"
   }
 }

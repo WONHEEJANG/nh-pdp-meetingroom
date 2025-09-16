@@ -11,9 +11,11 @@ interface TimeSlot {
 interface TimeSlotGridProps {
   selectedSlots: string[]
   onSlotSelect: (time: string) => void
+  bookedSlots: string[]
+  loading?: boolean
 }
 
-const TimeSlotGrid: React.FC<TimeSlotGridProps> = ({ selectedSlots, onSlotSelect }) => {
+const TimeSlotGrid: React.FC<TimeSlotGridProps> = ({ selectedSlots, onSlotSelect, bookedSlots, loading = false }) => {
   const generateTimeSlots = (): TimeSlot[] => {
     const slots: TimeSlot[] = []
     const startHour = 9
@@ -23,21 +25,11 @@ const TimeSlotGrid: React.FC<TimeSlotGridProps> = ({ selectedSlots, onSlotSelect
       for (let minute = 0; minute < 60; minute += 30) {
         const time = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`
         const isSelected = selectedSlots.includes(time)
-        
-        // 예약 불가능한 시간대 (10:00-11:30, 15:30-17:00)
-        const isUnavailable = 
-          (hour === 10 && minute === 0) || // 10:00
-          (hour === 10 && minute === 30) || // 10:30
-          (hour === 11 && minute === 0) || // 11:00
-          (hour === 11 && minute === 30) || // 11:30
-          (hour === 15 && minute === 30) || // 15:30
-          (hour === 16 && minute === 0) || // 16:00
-          (hour === 16 && minute === 30) || // 16:30
-          (hour === 17 && minute === 0) // 17:00
+        const isBooked = bookedSlots.includes(time)
         
         slots.push({
           time,
-          available: !isUnavailable,
+          available: !isBooked, // 예약된 슬롯은 사용 불가
           selected: isSelected
         })
       }
@@ -55,37 +47,53 @@ const TimeSlotGrid: React.FC<TimeSlotGridProps> = ({ selectedSlots, onSlotSelect
   }
 
   const handleSlotClick = (time: string) => {
+    if (loading) return
     onSlotSelect(time)
+  }
+
+  if (loading) {
+    return (
+      <div className="w-full">
+        <div className="flex justify-center items-center py-8">
+          <div className="text-[#767676]" style={{ fontFamily: 'Pretendard', fontSize: '14px' }}>
+            예약 정보를 불러오는 중...
+          </div>
+        </div>
+      </div>
+    )
   }
 
   return (
     <div className="w-full">
       {rows.map((row, rowIndex) => (
         <div key={rowIndex} className="flex gap-2 mb-2" style={{ height: '30px' }}>
-          {row.map((slot) => (
-            <button
-              key={slot.time}
-              onClick={() => handleSlotClick(slot.time)}
-              disabled={!slot.available}
-              className={`flex-1 rounded-full transition-colors touch-manipulation ${
-                slot.selected
-                  ? 'bg-[#111111] text-white'
-                  : slot.available
-                  ? 'bg-white border border-[#d3d3d3] text-[#121212] hover:bg-gray-50 active:bg-gray-100'
-                  : 'bg-[#f6f6f6] text-[#121212] cursor-not-allowed'
-              }`}
-              style={{ 
-                fontFamily: 'Pretendard', 
-                fontWeight: slot.selected ? 500 : 400, 
-                fontSize: '13px', 
-                letterSpacing: '-0.26px', 
-                lineHeight: '20px',
-                height: '30px'
-              }}
-            >
-              {slot.time}
-            </button>
-          ))}
+          {row.map((slot) => {
+            const isBooked = bookedSlots.includes(slot.time)
+            return (
+              <button
+                key={slot.time}
+                onClick={() => handleSlotClick(slot.time)}
+                disabled={!slot.available || loading}
+                className={`flex-1 rounded-full transition-colors touch-manipulation ${
+                  slot.selected
+                    ? 'bg-[#111111] text-white'
+                    : slot.available
+                    ? 'bg-white border border-[#d3d3d3] text-[#121212] hover:bg-gray-50 active:bg-gray-100'
+                    : 'bg-[#f6f6f6] text-[#767676] cursor-not-allowed'
+                }`}
+                style={{ 
+                  fontFamily: 'Pretendard', 
+                  fontWeight: slot.selected ? 500 : 400, 
+                  fontSize: '13px', 
+                  letterSpacing: '-0.26px', 
+                  lineHeight: '20px',
+                  height: '30px'
+                }}
+              >
+                {slot.time}
+              </button>
+            )
+          })}
         </div>
       ))}
     </div>

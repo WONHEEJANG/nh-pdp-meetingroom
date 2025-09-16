@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Header from '@/components/Header'
 import Calendar from '@/components/Calendar'
@@ -8,12 +8,108 @@ import RoomTabs from '@/components/RoomTabs'
 import RoomInfo from '@/components/RoomInfo'
 import TimeSlotGrid from '@/components/TimeSlotGrid'
 import ActionButtons from '@/components/ActionButtons'
+import { reservationService, Reservation } from '@/lib/supabase'
 
 export default function Home() {
   const router = useRouter()
   const [selectedDate, setSelectedDate] = useState<Date | null>(null) // 초기에는 선택된 날짜 없음
   const [selectedRoom, setSelectedRoom] = useState<number>(1)
   const [selectedTimeSlots, setSelectedTimeSlots] = useState<string[]>([])
+  const [reservations, setReservations] = useState<Reservation[]>([])
+  const [bookedTimeSlots, setBookedTimeSlots] = useState<string[]>([])
+  const [loading, setLoading] = useState(false)
+
+  // 예약 데이터 가져오기
+  const fetchReservations = async () => {
+    try {
+      setLoading(true)
+      const data = await reservationService.getReservations()
+      setReservations(data || [])
+    } catch (error) {
+      console.error('예약 데이터 가져오기 실패:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // 예약된 시간 슬롯 계산
+  const calculateBookedTimeSlots = (reservations: Reservation[], room: number, date: Date) => {
+    const roomName = `회의실 ${room}`
+    const dateStr = `${date.getFullYear()}. ${date.getMonth() + 1}. ${date.getDate()}.`
+    
+    const bookedSlots: string[] = []
+    
+    reservations.forEach(reservation => {
+      if (reservation.room === roomName && reservation.date === dateStr) {
+        // 시간 문자열을 파싱하여 30분 단위 슬롯으로 변환
+        const timeSlots = parseTimeRange(reservation.time)
+        bookedSlots.push(...timeSlots)
+      }
+    })
+    
+    return bookedSlots
+  }
+
+  // 시간 범위를 30분 단위 슬롯으로 파싱
+  const parseTimeRange = (timeRange: string): string[] => {
+    const slots: string[] = []
+    
+    // "09:00-10:30" 또는 "09:00 - 10:30" 형식 처리
+    const ranges = timeRange.split(',').map(range => range.trim())
+    
+    ranges.forEach(range => {
+      const [start, end] = range.split(/[-~]/).map(t => t.trim())
+      if (start && end) {
+        const startMinutes = timeToMinutes(start)
+        const endMinutes = timeToMinutes(end)
+        
+        // 30분 단위로 슬롯 생성
+        for (let minutes = startMinutes; minutes < endMinutes; minutes += 30) {
+          slots.push(minutesToTime(minutes))
+        }
+      }
+    })
+    
+    return slots
+  }
+
+  // 시간을 분으로 변환
+  const timeToMinutes = (time: string) => {
+    const [hours, minutes] = time.split(':').map(Number)
+    return hours * 60 + minutes
+  }
+
+  // 분을 시간으로 변환
+  const minutesToTime = (minutes: number) => {
+    const hours = Math.floor(minutes / 60)
+    const mins = minutes % 60
+    return `${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}`
+  }
+
+  // 컴포넌트 마운트 시 예약 데이터 가져오기
+  useEffect(() => {
+    fetchReservations()
+  }, [])
+
+  // 페이지 포커스 시 예약 데이터 새로고침 (예약 완료 후 돌아올 때)
+  useEffect(() => {
+    const handleFocus = () => {
+      fetchReservations()
+    }
+
+    window.addEventListener('focus', handleFocus)
+    return () => window.removeEventListener('focus', handleFocus)
+  }, [])
+
+  // 날짜나 회의실이 변경될 때 예약된 시간 슬롯 업데이트
+  useEffect(() => {
+    if (selectedDate) {
+      const booked = calculateBookedTimeSlots(reservations, selectedRoom, selectedDate)
+      setBookedTimeSlots(booked)
+    } else {
+      setBookedTimeSlots([])
+    }
+  }, [selectedDate, selectedRoom, reservations])
 
   const handleDateSelect = (date: Date) => {
     setSelectedDate(date)
@@ -35,6 +131,11 @@ export default function Home() {
   }
 
   const handleTimeSlotSelect = (time: string) => {
+    // 예약된 시간 슬롯은 선택할 수 없음
+    if (bookedTimeSlots.includes(time)) {
+      return
+    }
+    
     setSelectedTimeSlots(prev => {
       if (prev.includes(time)) {
         return prev.filter(t => t !== time)
@@ -158,14 +259,15 @@ export default function Home() {
 
         {/* Room Info */}
         <RoomInfo 
-          capacity={10}
-          features={['영상기기 연결 지원']}
+          selectedRoom={selectedRoom}
         />
 
         {/* Time Slot Grid */}
         <TimeSlotGrid 
           selectedSlots={selectedTimeSlots}
           onSlotSelect={handleTimeSlotSelect}
+          bookedSlots={bookedTimeSlots}
+          loading={loading}
         />
 
       </div>
