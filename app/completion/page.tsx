@@ -9,6 +9,7 @@ interface CompletionData {
   room: string
   date: string
   time: string
+  isCancellation?: string
 }
 
 const CompletionPage: React.FC = () => {
@@ -20,8 +21,11 @@ const CompletionPage: React.FC = () => {
     purpose: searchParams.get('purpose') || '-',
     room: searchParams.get('room') || '-',
     date: searchParams.get('date') || '-',
-    time: searchParams.get('time') || '-'
+    time: searchParams.get('time') || '-',
+    isCancellation: searchParams.get('isCancellation') || 'false'
   }
+
+  const isCancellation = completionData.isCancellation === 'true'
 
   // Scroll to top on component mount
   useEffect(() => {
@@ -48,11 +52,6 @@ const CompletionPage: React.FC = () => {
       window.removeEventListener('popstate', handlePopState)
     }
   }, [])
-
-  const handleShare = () => {
-    console.log('공유하기')
-    // Here you would implement sharing functionality
-  }
 
   const handleConfirm = () => {
     router.push('/')
@@ -86,12 +85,20 @@ const CompletionPage: React.FC = () => {
             className="text-[#121212] text-left"
             style={{ fontFamily: 'Pretendard', fontWeight: 600, fontSize: '26px', letterSpacing: '-0.52px', lineHeight: '38px' }}
           >
-            <span className="text-[#19973c]">{completionData.room}</span>을 예약했어요
+            {isCancellation ? (
+              <>
+                <span className="text-[#19973c]">{completionData.room}</span> 예약을 취소했어요
+              </>
+            ) : (
+              <>
+                <span className="text-[#19973c]">{completionData.room}</span>을 예약했어요
+              </>
+            )}
           </h2>
         </div>
 
         {/* Booking Summary */}
-        <div className="w-full bg-[#f6f6f6] rounded-2xl p-6 mb-8">
+        <div className="w-full bg-[#f6f6f6] rounded-2xl p-5 mb-8">
           <div className="space-y-4">
             {/* 신청자 */}
             <div className="flex items-center justify-between">
@@ -102,26 +109,10 @@ const CompletionPage: React.FC = () => {
                 신청자
               </span>
               <span
-                className="text-[#121212]"
+                className="text-[#121212] text-right"
                 style={{ fontFamily: 'Pretendard', fontWeight: 500, fontSize: '15px', letterSpacing: '-0.3px', lineHeight: '20px' }}
               >
                 {completionData.reserverName}
-              </span>
-            </div>
-
-            {/* 사용 목적 */}
-            <div className="flex items-center justify-between">
-              <span
-                className="text-[#505050]"
-                style={{ fontFamily: 'Pretendard', fontWeight: 400, fontSize: '15px', letterSpacing: '-0.3px', lineHeight: '20px' }}
-              >
-                사용 목적
-              </span>
-              <span
-                className="text-[#121212]"
-                style={{ fontFamily: 'Pretendard', fontWeight: 500, fontSize: '15px', letterSpacing: '-0.3px', lineHeight: '20px' }}
-              >
-                {completionData.purpose}
               </span>
             </div>
 
@@ -134,7 +125,7 @@ const CompletionPage: React.FC = () => {
                 장소
               </span>
               <span
-                className="text-[#121212]"
+                className="text-[#121212] text-right"
                 style={{ fontFamily: 'Pretendard', fontWeight: 500, fontSize: '15px', letterSpacing: '-0.3px', lineHeight: '20px' }}
               >
                 {completionData.room}
@@ -150,7 +141,7 @@ const CompletionPage: React.FC = () => {
                 날짜
               </span>
               <span
-                className="text-[#121212]"
+                className="text-[#121212] text-right"
                 style={{ fontFamily: 'Pretendard', fontWeight: 500, fontSize: '15px', letterSpacing: '-0.3px', lineHeight: '20px' }}
               >
                 {completionData.date}
@@ -166,7 +157,7 @@ const CompletionPage: React.FC = () => {
                 시간
               </span>
               <span
-                className="text-[#121212]"
+                className="text-[#121212] text-right"
                 style={{ fontFamily: 'Pretendard', fontWeight: 500, fontSize: '15px', letterSpacing: '-0.3px', lineHeight: '20px' }}
               >
                 {completionData.time}
@@ -180,28 +171,11 @@ const CompletionPage: React.FC = () => {
       <div className="w-full bg-white fixed bottom-0 left-0 right-0 z-10">
         <div className="w-full bg-gradient-to-r from-white to-transparent" style={{ height: '18px' }}></div>
         <div className="w-full bg-gradient-to-b from-white to-transparent flex items-center justify-center py-6 px-6">
-          <div className="flex gap-3 w-full">
-            {/* Share Button */}
-            <button
-              onClick={handleShare}
-              className="bg-white border border-[#d3d3d3] rounded-xl text-[#121212] hover:bg-gray-50 active:bg-gray-100 transition-colors touch-manipulation"
-              style={{
-                fontFamily: 'Pretendard',
-                fontWeight: 500,
-                fontSize: '18px',
-                letterSpacing: '-0.36px',
-                lineHeight: '26px',
-                height: '56px',
-                width: '100px'
-              }}
-            >
-              공유하기
-            </button>
-
+          <div className="w-full">
             {/* Confirm Button */}
             <button
               onClick={handleConfirm}
-              className="flex-1 bg-[#19973c] text-white rounded-xl transition-colors touch-manipulation hover:bg-[#15803d] active:bg-[#137a35]"
+              className="w-full bg-[#19973c] text-white rounded-xl transition-colors touch-manipulation hover:bg-[#15803d] active:bg-[#137a35]"
               style={{
                 fontFamily: 'Pretendard',
                 fontWeight: 500,

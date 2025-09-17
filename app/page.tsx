@@ -158,8 +158,8 @@ export default function Home() {
   }
 
   const handleCancel = () => {
-    console.log('예약취소')
-    setSelectedTimeSlots([])
+    // Navigate to cancel page
+    router.push('/cancel')
   }
 
   const handleConfirm = () => {

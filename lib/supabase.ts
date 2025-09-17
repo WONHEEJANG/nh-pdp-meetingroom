@@ -95,5 +95,37 @@ export const reservationService = {
     }
     
     return data?.[0]
+  },
+
+  // Delete multiple reservations
+  async deleteReservations(ids: number[]) {
+    const { data, error } = await supabase
+      .from('reservation')
+      .delete()
+      .in('id', ids)
+      .select()
+    
+    if (error) {
+      console.error('Error deleting reservations:', error)
+      throw error
+    }
+    
+    return data
+  },
+
+  // Verify password for reservation
+  async verifyReservationPassword(id: number, password: string) {
+    const { data, error } = await supabase
+      .from('reservation')
+      .select('password')
+      .eq('id', id)
+      .single()
+    
+    if (error) {
+      console.error('Error verifying password:', error)
+      throw error
+    }
+    
+    return data?.password === password
   }
 }

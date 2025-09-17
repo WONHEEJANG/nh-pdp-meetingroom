@@ -19,6 +19,8 @@ export default function BookingPage() {
   const [password, setPassword] = useState('')
   const [selectedPurposes, setSelectedPurposes] = useState<string[]>([])
   const [isNoticeExpanded, setIsNoticeExpanded] = useState(true)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [showPasswordModal, setShowPasswordModal] = useState(false)
 
   // URL에서 예약 데이터 가져오기
   const bookingData: BookingData = {
@@ -73,8 +75,18 @@ export default function BookingPage() {
   }
 
   const handleSubmit = async () => {
+    if (isSubmitting) return // 중복 제출 방지
+    
+    // 비밀번호 4자리 검증
+    if (password.length !== 4) {
+      setShowPasswordModal(true)
+      return
+    }
+    
+    setIsSubmitting(true)
+    
     try {
-      console.log('예약 완료', {
+      console.log('예약 시작', {
         bookingData,
         formData: {
           reserverName,
@@ -93,10 +105,12 @@ export default function BookingPage() {
         password: password
       }
 
+      console.log('📤 Supabase에 데이터 전송 중...')
       const savedReservation = await reservationService.createReservation(reservationData)
       console.log('✅ Reservation saved:', savedReservation)
       
-      // Navigate to completion page with form data
+      // 데이터 삽입 완료 후 페이지 이동
+      console.log('📱 Completion 페이지로 이동 중...')
       const params = new URLSearchParams({
         reserverName: reserverName || '김농협',
         purpose: purpose || '팀 회의', // 인풋필드의 실제 텍스트 사용
@@ -109,7 +123,12 @@ export default function BookingPage() {
     } catch (error) {
       console.error('❌ Error saving reservation:', error)
       alert('예약 저장 중 오류가 발생했습니다. 다시 시도해주세요.')
+      setIsSubmitting(false) // 에러 시 로딩 상태 해제
     }
+  }
+
+  const handleModalClose = () => {
+    setShowPasswordModal(false)
   }
 
   return (
@@ -367,7 +386,12 @@ export default function BookingPage() {
         <div className="w-full bg-gradient-to-b from-white to-transparent flex items-center justify-center py-6 px-6">
           <button
             onClick={handleSubmit}
-            className="w-full bg-[#19973c] text-white rounded-xl transition-colors touch-manipulation"
+            disabled={isSubmitting}
+            className={`w-full rounded-xl transition-colors touch-manipulation ${
+              isSubmitting 
+                ? 'bg-[#cccccc] text-[#666666] cursor-not-allowed' 
+                : 'bg-[#19973c] text-white hover:bg-[#15803d] active:bg-[#166534]'
+            }`}
             style={{ 
               fontFamily: 'Pretendard', 
               fontWeight: 500, 
@@ -377,10 +401,47 @@ export default function BookingPage() {
               height: '56px'
             }}
           >
-            예약하기
+            {isSubmitting ? '예약 중' : '예약하기'}
           </button>
         </div>
       </div>
+
+      {/* Password Modal */}
+      {showPasswordModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-2xl mx-6" style={{ width: '312px' }}>
+            {/* Contents */}
+            <div className="px-6 pb-6 pt-10">
+              {/* Text */}
+              <div className="text-left" style={{ marginBottom: '32px' }}>
+                <p 
+                  className="text-[#121212]"
+                  style={{ fontFamily: 'Pretendard', fontWeight: 400, fontSize: '15px', letterSpacing: '-0.3px', lineHeight: '24px' }}
+                >
+                  4자리 비밀번호를 입력해 주세요.
+                </p>
+              </div>
+
+              {/* CTA Button */}
+              <button
+                onClick={handleModalClose}
+                className="w-full bg-white border border-[#19973c] text-[#19973c] rounded-xl transition-colors touch-manipulation flex items-center justify-center"
+                style={{ 
+                  fontFamily: 'Pretendard', 
+                  fontWeight: 500, 
+                  fontSize: '16px', 
+                  letterSpacing: '-0.32px', 
+                  lineHeight: '24px',
+                  height: '48px',
+                  minHeight: '48px'
+                }}
+              >
+                확인
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
