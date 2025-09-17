@@ -185,7 +185,7 @@ export default function CancelPage() {
       
       // 취소 완료 후 completion 화면으로 이동
       const completionData = {
-        reserverName: validReservations[0].reserver_name,
+        reserverName: validReservations.map(r => r.reserver_name).join(', '),
         room: validReservations[0].room,
         date: validReservations[0].date,
         time: validReservations.map(r => r.time).join(', '),

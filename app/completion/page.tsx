@@ -158,7 +158,14 @@ const CompletionPage: React.FC = () => {
               </span>
               <span
                 className="text-[#121212] text-right"
-                style={{ fontFamily: 'Pretendard', fontWeight: 500, fontSize: '15px', letterSpacing: '-0.3px', lineHeight: '20px' }}
+                style={{ 
+                  fontFamily: 'Pretendard', 
+                  fontWeight: 500, 
+                  fontSize: '15px', 
+                  letterSpacing: '-0.3px', 
+                  lineHeight: '20px',
+                  width: '80%'
+                }}
               >
                 {completionData.time}
               </span>
