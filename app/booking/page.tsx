@@ -481,6 +481,11 @@ export default function BookingPage() {
                      type="password"
                      value={password}
                      onChange={(e) => setPassword(e.target.value)}
+                     onKeyDown={(e) => {
+                       if (e.key === 'Enter') {
+                         handleSubmit()
+                       }
+                     }}
                      placeholder="4자리 숫자 입력"
                      inputMode="numeric"
                      pattern="[0-9]*"
