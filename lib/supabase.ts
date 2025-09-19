@@ -135,7 +135,7 @@ export const reservationService = {
     const { data, error } = await supabase
       .from('reservation')
       .delete()
-      .eq('id', reservationId)
+      .eq('id', parseInt(reservationId))
       .in('time', timeSlots)
       .select()
     

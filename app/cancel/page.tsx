@@ -224,7 +224,7 @@ export default function CancelPage() {
       // 각 예약 ID에 대해 비밀번호 검증
       const reservationIds = Object.keys(slotsByReservationId)
       const passwordVerificationPromises = reservationIds.map(id => 
-        reservationService.verifyReservationPassword(id, password)
+        reservationService.verifyReservationPassword(parseInt(id), password)
       )
       
       const passwordResults = await Promise.all(passwordVerificationPromises)
