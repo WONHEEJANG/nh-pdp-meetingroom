@@ -18,6 +18,7 @@ export default function CancelPage() {
   const [selectedDate, setSelectedDate] = useState<Date | null>(new Date()) // 오늘 날짜로 초기화
   const [selectedRoom, setSelectedRoom] = useState<number>(1)
   const [selectedReservations, setSelectedReservations] = useState<Reservation[]>([])
+  const [selectedTimeSlots, setSelectedTimeSlots] = useState<{id: string, time: string}[]>([])
   const [password, setPassword] = useState('')
   const [reservations, setReservations] = useState<any[]>([])
   const [loading, setLoading] = useState(false)
@@ -69,6 +70,42 @@ export default function CancelPage() {
       .flat()
   }
 
+  // 시간을 분으로 변환
+  const timeToMinutes = (time: string) => {
+    const [hours, minutes] = time.split(':').map(Number)
+    return hours * 60 + minutes
+  }
+
+  // 분을 시간으로 변환
+  const minutesToTime = (minutes: number) => {
+    const hours = Math.floor(minutes / 60)
+    const mins = minutes % 60
+    return `${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}`
+  }
+
+  // 시간을 30분 단위로 파싱하는 함수
+  const parseTimeSlots = (timeRange: string, reserverName: string, reservationId: string) => {
+    const slots: { time: string, reserver: string, id: string }[] = []
+    
+    // "09:00 - 10:00" 형식을 파싱
+    const [start, end] = timeRange.split(' - ').map(t => t.trim())
+    if (start && end) {
+      const startMinutes = timeToMinutes(start)
+      const endMinutes = timeToMinutes(end)
+      
+      // 30분 단위로 슬롯 생성
+      for (let minutes = startMinutes; minutes < endMinutes; minutes += 30) {
+        slots.push({
+          time: `${minutesToTime(minutes)} - ${minutesToTime(minutes + 30)}`,
+          reserver: reserverName,
+          id: reservationId
+        })
+      }
+    }
+    
+    return slots
+  }
+
   // 선택된 날짜와 회의실에 해당하는 예약 목록 필터링
   const filteredReservations = reservations.filter(reservation => {
     if (!selectedDate) return false
@@ -103,9 +140,15 @@ export default function CancelPage() {
     return isSameDate && isSameRoom
   })
 
+  // 30분 단위로 변환된 예약 목록
+  const timeSlotReservations = filteredReservations
+    .flatMap(reservation => parseTimeSlots(reservation.time, reservation.reserver_name, reservation.id!))
+    .sort((a, b) => a.time.localeCompare(b.time))
+
   const handleDateSelect = (date: Date) => {
     setSelectedDate(date)
     setSelectedReservations([]) // 날짜 변경 시 선택된 예약 초기화
+    setSelectedTimeSlots([]) // 날짜 변경 시 선택된 시간 슬롯 초기화
     setShowDatePicker(false) // 날짜 선택 후 바텀시트 닫기
   }
 
@@ -124,6 +167,7 @@ export default function CancelPage() {
   const handleRoomSelect = (room: number) => {
     setSelectedRoom(room)
     setSelectedReservations([]) // 회의실 변경 시 선택된 예약 초기화
+    setSelectedTimeSlots([]) // 회의실 변경 시 선택된 시간 슬롯 초기화
   }
 
   const handleReservationSelect = (reservation: Reservation) => {
@@ -137,6 +181,17 @@ export default function CancelPage() {
     })
   }
 
+  const handleTimeSlotSelect = (slot: {id: string, time: string, reserver: string}) => {
+    setSelectedTimeSlots(prev => {
+      const isSelected = prev.some(selected => selected.id === slot.id && selected.time === slot.time)
+      if (isSelected) {
+        return prev.filter(selected => !(selected.id === slot.id && selected.time === slot.time))
+      } else {
+        return [...prev, { id: slot.id, time: slot.time }]
+      }
+    })
+  }
+
   const handleBack = () => {
     router.back()
   }
@@ -144,7 +199,7 @@ export default function CancelPage() {
   const handleSubmit = async () => {
     if (isSubmitting) return
     
-    if (selectedReservations.length === 0) {
+    if (selectedTimeSlots.length === 0) {
       alert('취소할 예약을 선택해주세요.')
       return
     }
@@ -157,17 +212,19 @@ export default function CancelPage() {
     setIsSubmitting(true)
     
     try {
-      // id가 없는 예약들 필터링
-      const validReservations = selectedReservations.filter(reservation => reservation.id)
-      if (validReservations.length === 0) {
-        alert('유효하지 않은 예약입니다. 다시 선택해주세요.')
-        setIsSubmitting(false)
-        return
-      }
+      // 선택된 30분 슬롯들을 ID별로 그룹화
+      const slotsByReservationId = selectedTimeSlots.reduce((acc, slot) => {
+        if (!acc[slot.id]) {
+          acc[slot.id] = []
+        }
+        acc[slot.id].push(slot.time)
+        return acc
+      }, {} as Record<string, string[]>)
       
-      // 비밀번호 검증
-      const passwordVerificationPromises = validReservations.map(reservation => 
-        reservationService.verifyReservationPassword(reservation.id!, password)
+      // 각 예약 ID에 대해 비밀번호 검증
+      const reservationIds = Object.keys(slotsByReservationId)
+      const passwordVerificationPromises = reservationIds.map(id => 
+        reservationService.verifyReservationPassword(id, password)
       )
       
       const passwordResults = await Promise.all(passwordVerificationPromises)
@@ -179,17 +236,22 @@ export default function CancelPage() {
         return
       }
       
-      // 예약 삭제
-      const reservationIds = validReservations.map(reservation => reservation.id!)
-      await reservationService.deleteReservations(reservationIds)
+      // 선택된 30분 슬롯들만 삭제 (각 예약 ID별로)
+      for (const reservationId of reservationIds) {
+        const timeSlots = slotsByReservationId[reservationId]
+        await reservationService.deleteTimeSlots(reservationId, timeSlots)
+      }
       
       // 취소 완료 후 completion 화면으로 이동
       const completionData = {
-        reserverName: validReservations.map(r => r.reserver_name).join(', '),
-        room: validReservations[0].room,
-        date: validReservations[0].date,
-        time: validReservations.map(r => r.time).join(', '),
-        purpose: validReservations[0].purpose,
+        reserverName: selectedTimeSlots.map(slot => {
+          const reservation = filteredReservations.find(r => r.id === slot.id)
+          return reservation?.reserver_name || ''
+        }).filter((name, index, arr) => arr.indexOf(name) === index).join(', '),
+        room: `회의실 ${selectedRoom}`,
+        date: selectedDate ? `${selectedDate.getFullYear()}. ${selectedDate.getMonth() + 1}. ${selectedDate.getDate()}.` : '',
+        time: selectedTimeSlots.map(slot => slot.time).join(', '),
+        purpose: '팀 회의', // 기본값
         isCancellation: 'true'
       }
       
@@ -312,13 +374,13 @@ export default function CancelPage() {
                   예약 정보를 불러오는 중...
                 </span>
               </div>
-            ) : filteredReservations.length > 0 ? (
-              filteredReservations.map((reservation) => (
+            ) : timeSlotReservations.length > 0 ? (
+              timeSlotReservations.map((slot, index) => (
                 <button
-                  key={reservation.id}
-                  onClick={() => handleReservationSelect(reservation)}
+                  key={`${slot.id}-${index}`}
+                  onClick={() => handleTimeSlotSelect(slot)}
                   className={`w-full rounded-xl border transition-colors ${
-                    selectedReservations.some(selected => selected.id === reservation.id)
+                    selectedTimeSlots.some(selected => selected.id === slot.id && selected.time === slot.time)
                       ? 'border-[#19973c] bg-white'
                       : 'border-[#e1e1e1] bg-white'
                   }`}
@@ -331,7 +393,7 @@ export default function CancelPage() {
                   <div className="flex items-center justify-between h-full">
                     <p 
                       className={`${
-                        selectedReservations.some(selected => selected.id === reservation.id) ? 'text-[#19973c]' : 'text-[#121212]'
+                        selectedTimeSlots.some(selected => selected.id === slot.id && selected.time === slot.time) ? 'text-[#19973c]' : 'text-[#121212]'
                       }`}
                       style={{ 
                         fontFamily: 'Pretendard', 
@@ -341,10 +403,10 @@ export default function CancelPage() {
                         lineHeight: '24px'
                       }}
                     >
-                      {reservation.time} / {reservation.reserver_name}
+                      {slot.time} / {slot.reserver}
                     </p>
                     <div className="w-6 h-6 flex items-center justify-center">
-                      {selectedReservations.some(selected => selected.id === reservation.id) ? (
+                      {selectedTimeSlots.some(selected => selected.id === slot.id && selected.time === slot.time) ? (
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                           <path d="M18 8L10.364 16L6 12" stroke="#19973C" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                         </svg>
@@ -401,9 +463,9 @@ export default function CancelPage() {
         <div className="w-full bg-gradient-to-b from-white to-transparent flex items-center justify-center py-6 px-6">
           <button
             onClick={handleSubmit}
-            disabled={isSubmitting || selectedReservations.length === 0 || password.length !== 4}
+            disabled={isSubmitting || selectedTimeSlots.length === 0 || password.length !== 4}
             className={`w-full rounded-xl transition-colors touch-manipulation ${
-              isSubmitting || selectedReservations.length === 0 || password.length !== 4
+              isSubmitting || selectedTimeSlots.length === 0 || password.length !== 4
                 ? 'bg-[#cccccc] text-[#666666] cursor-not-allowed'
                 : 'bg-[#19973c] text-white hover:bg-[#15803d] active:bg-[#166534]'
             }`}

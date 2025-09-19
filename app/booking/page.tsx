@@ -198,10 +198,37 @@ export default function BookingPage() {
         }
       })
       
-      // 선택된 시간 슬롯을 연속된 그룹으로 포맷
+      // 30분 단위로 각 슬롯을 개별 레코드로 생성
+      const createTimeSlotRecords = (slots: string[]) => {
+        return slots.map(slot => {
+          const endTime = minutesToTime(timeToMinutes(slot) + 30)
+          return {
+            reserver_name: reserverName || '김농협',
+            purpose: purpose || '팀 회의',
+            room: bookingData.room,
+            date: bookingData.date,
+            time: `${slot} - ${endTime}`,
+            password: password
+          }
+        })
+      }
+
+      // 30분 단위로 여러 레코드 생성
+      const reservationRecords = createTimeSlotRecords(selectedTimeSlots)
+
+      console.log('📤 Supabase에 데이터 전송 중...')
+      const savedReservations = await Promise.all(
+        reservationRecords.map(record => reservationService.createReservation(record))
+      )
+      console.log('✅ Reservations saved:', savedReservations)
+      
+      // 데이터 삽입 완료 후 페이지 이동
+      console.log('📱 Completion 페이지로 이동 중...')
+      
+      // 30분 단위로 시간 표시 (연속된 구간으로 그룹화)
       const formatTimeSlots = (slots: string[]) => {
         if (slots.length === 0) return ''
-        if (slots.length === 1) return slots[0]
+        if (slots.length === 1) return `${slots[0]} - ${minutesToTime(timeToMinutes(slots[0]) + 30)}`
         
         // 시간 슬롯을 분으로 변환하고 정렬
         const sortedSlots = slots
@@ -236,23 +263,7 @@ export default function BookingPage() {
         
         return groups.join(', ')
       }
-
-      // Save to Supabase
-      const reservationData = {
-        reserver_name: reserverName || '김농협',
-        purpose: purpose || '팀 회의',
-        room: bookingData.room,
-        date: bookingData.date,
-        time: formatTimeSlots(selectedTimeSlots),
-        password: password
-      }
-
-      console.log('📤 Supabase에 데이터 전송 중...')
-      const savedReservation = await reservationService.createReservation(reservationData)
-      console.log('✅ Reservation saved:', savedReservation)
       
-      // 데이터 삽입 완료 후 페이지 이동
-      console.log('📱 Completion 페이지로 이동 중...')
       const params = new URLSearchParams({
         reserverName: reserverName || '김농협',
         purpose: purpose || '팀 회의', // 인풋필드의 실제 텍스트 사용

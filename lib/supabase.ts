@@ -127,5 +127,23 @@ export const reservationService = {
     }
     
     return data?.password === password
+  },
+
+  // Delete specific time slots from a reservation
+  async deleteTimeSlots(reservationId: string, timeSlots: string[]) {
+    // 30분 단위로 저장된 데이터에서는 해당 시간 슬롯들을 직접 삭제
+    const { data, error } = await supabase
+      .from('reservation')
+      .delete()
+      .eq('id', reservationId)
+      .in('time', timeSlots)
+      .select()
+    
+    if (error) {
+      console.error('Error deleting time slots:', error)
+      throw error
+    }
+    
+    return data
   }
 }
