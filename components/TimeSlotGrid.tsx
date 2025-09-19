@@ -56,7 +56,7 @@ const TimeSlotGrid: React.FC<TimeSlotGridProps> = ({ selectedSlots, onSlotSelect
       <div className="w-full">
         <div className="flex justify-center items-center py-8">
           <div className="text-[#767676]" style={{ fontFamily: 'Pretendard', fontSize: '14px' }}>
-            예약 정보를 불러오는 중...
+            예약 정보를 불러오는 중
           </div>
         </div>
       </div>

@@ -2,7 +2,8 @@
 
 import React, { useState, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { reservationService } from '@/lib/supabase'
+import { reservationService, Reservation } from '@/lib/supabase'
+import TimeSlotGrid from '@/components/TimeSlotGrid'
 
 interface BookingData {
   room: string
@@ -21,6 +22,12 @@ export default function BookingPage() {
   const [isNoticeExpanded, setIsNoticeExpanded] = useState(true)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [showPasswordModal, setShowPasswordModal] = useState(false)
+  
+  // TimeSlotGrid 관련 state
+  const [selectedTimeSlots, setSelectedTimeSlots] = useState<string[]>([])
+  const [reservations, setReservations] = useState<Reservation[]>([])
+  const [bookedTimeSlots, setBookedTimeSlots] = useState<string[]>([])
+  const [loading, setLoading] = useState(false)
 
   // URL에서 예약 데이터 가져오기
   const bookingData: BookingData = {
@@ -29,10 +36,85 @@ export default function BookingPage() {
     time: searchParams.get('time') || '-'
   }
 
-  // 컴포넌트 마운트 시 스크롤을 맨 위로 초기화
+  // 예약 데이터 가져오기
+  const fetchReservations = async () => {
+    try {
+      setLoading(true)
+      const data = await reservationService.getReservations()
+      setReservations(data || [])
+    } catch (error) {
+      console.error('예약 데이터 가져오기 실패:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // 예약된 시간 슬롯 계산
+  const calculateBookedTimeSlots = (reservations: Reservation[], room: string, date: string) => {
+    const bookedSlots: string[] = []
+    
+    reservations.forEach(reservation => {
+      if (reservation.room === room && reservation.date === date) {
+        // 시간 문자열을 파싱하여 30분 단위 슬롯으로 변환
+        const timeSlots = parseTimeRange(reservation.time)
+        bookedSlots.push(...timeSlots)
+      }
+    })
+    
+    return bookedSlots
+  }
+
+  // 시간 범위를 30분 단위 슬롯으로 파싱
+  const parseTimeRange = (timeRange: string): string[] => {
+    const slots: string[] = []
+    
+    // "09:00-10:30" 또는 "09:00 - 10:30" 형식 처리
+    const ranges = timeRange.split(',').map(range => range.trim())
+    
+    ranges.forEach(range => {
+      const [start, end] = range.split(/[-~]/).map(t => t.trim())
+      if (start && end) {
+        const startMinutes = timeToMinutes(start)
+        const endMinutes = timeToMinutes(end)
+        
+        // 30분 단위로 슬롯 생성
+        for (let minutes = startMinutes; minutes < endMinutes; minutes += 30) {
+          slots.push(minutesToTime(minutes))
+        }
+      }
+    })
+    
+    return slots
+  }
+
+  // 시간을 분으로 변환
+  const timeToMinutes = (time: string) => {
+    const [hours, minutes] = time.split(':').map(Number)
+    return hours * 60 + minutes
+  }
+
+  // 분을 시간으로 변환
+  const minutesToTime = (minutes: number) => {
+    const hours = Math.floor(minutes / 60)
+    const mins = minutes % 60
+    return `${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}`
+  }
+
+  // 컴포넌트 마운트 시 스크롤을 맨 위로 초기화 및 예약 데이터 가져오기
   useEffect(() => {
     window.scrollTo(0, 0)
+    fetchReservations()
   }, [])
+
+  // 예약 데이터가 변경될 때 예약된 시간 슬롯 업데이트
+  useEffect(() => {
+    if (bookingData.room && bookingData.date) {
+      const booked = calculateBookedTimeSlots(reservations, bookingData.room, bookingData.date)
+      setBookedTimeSlots(booked)
+    } else {
+      setBookedTimeSlots([])
+    }
+  }, [reservations, bookingData.room, bookingData.date])
 
   const purposeOptions = ['팀 회의', '부서 회의', '업체 미팅', '업무 회의']
 
@@ -48,6 +130,21 @@ export default function BookingPage() {
 
   const handlePurposeRemove = (purpose: string) => {
     setSelectedPurposes(selectedPurposes.filter(p => p !== purpose))
+  }
+
+  const handleTimeSlotSelect = (time: string) => {
+    // 예약된 시간 슬롯은 선택할 수 없음
+    if (bookedTimeSlots.includes(time)) {
+      return
+    }
+    
+    setSelectedTimeSlots(prev => {
+      if (prev.includes(time)) {
+        return prev.filter(t => t !== time)
+      } else {
+        return [...prev, time].sort()
+      }
+    })
   }
 
   const toggleNotice = () => {
@@ -77,6 +174,12 @@ export default function BookingPage() {
   const handleSubmit = async () => {
     if (isSubmitting) return // 중복 제출 방지
     
+    // 시간 슬롯 선택 검증
+    if (selectedTimeSlots.length === 0) {
+      alert('예약할 시간을 선택해주세요.')
+      return
+    }
+
     // 비밀번호 4자리 검증
     if (password.length !== 4) {
       setShowPasswordModal(true)
@@ -95,13 +198,52 @@ export default function BookingPage() {
         }
       })
       
+      // 선택된 시간 슬롯을 연속된 그룹으로 포맷
+      const formatTimeSlots = (slots: string[]) => {
+        if (slots.length === 0) return ''
+        if (slots.length === 1) return slots[0]
+        
+        // 시간 슬롯을 분으로 변환하고 정렬
+        const sortedSlots = slots
+          .map(time => ({ time, minutes: timeToMinutes(time) }))
+          .sort((a, b) => a.minutes - b.minutes)
+        
+        const groups: string[] = []
+        let currentGroup: { start: string, end: string } | null = null
+        
+        for (const slot of sortedSlots) {
+          if (!currentGroup) {
+            // 첫 번째 슬롯 (30분 구간의 시작)
+            currentGroup = { start: slot.time, end: minutesToTime(slot.minutes + 30) }
+          } else {
+            // 현재 그룹의 마지막 시간이 다음 슬롯의 시작 시간과 같으면 연속
+            const lastEndMinutes = timeToMinutes(currentGroup.end)
+            if (lastEndMinutes === slot.minutes) {
+              // 연속된 구간이므로 종료 시간을 30분 연장
+              currentGroup.end = minutesToTime(slot.minutes + 30)
+            } else {
+              // 연속이 아니면 현재 그룹을 저장하고 새 그룹 시작
+              groups.push(`${currentGroup.start} - ${currentGroup.end}`)
+              currentGroup = { start: slot.time, end: minutesToTime(slot.minutes + 30) }
+            }
+          }
+        }
+        
+        // 마지막 그룹 추가
+        if (currentGroup) {
+          groups.push(`${currentGroup.start} - ${currentGroup.end}`)
+        }
+        
+        return groups.join(', ')
+      }
+
       // Save to Supabase
       const reservationData = {
         reserver_name: reserverName || '김농협',
         purpose: purpose || '팀 회의',
         room: bookingData.room,
         date: bookingData.date,
-        time: bookingData.time,
+        time: formatTimeSlots(selectedTimeSlots),
         password: password
       }
 
@@ -116,7 +258,7 @@ export default function BookingPage() {
         purpose: purpose || '팀 회의', // 인풋필드의 실제 텍스트 사용
         room: bookingData.room,
         date: bookingData.date,
-        time: bookingData.time
+        time: formatTimeSlots(selectedTimeSlots)
       })
 
       router.push(`/completion?${params.toString()}`)
@@ -198,30 +340,49 @@ export default function BookingPage() {
               </span>
             </div>
 
-            {/* 시간 */}
-            <div className="flex items-center justify-between">
-              <span 
-                className="text-[#505050]"
-                style={{ fontFamily: 'Pretendard', fontWeight: 400, fontSize: '15px', letterSpacing: '-0.3px', lineHeight: '20px' }}
-              >
-                시간
-              </span>
-              <span 
-                className="text-[#121212] text-right"
-                style={{ 
-                  fontFamily: 'Pretendard', 
-                  fontWeight: 500, 
-                  fontSize: '15px', 
-                  letterSpacing: '-0.3px', 
-                  lineHeight: '20px',
-                  width: '80%',
-                  wordBreak: 'normal'
-                }}
-              >
-                {bookingData.time}
-              </span>
+          </div>
+        </div>
+
+        {/* Time Slot Grid */}
+        <div className="mb-6">
+          <div className="mb-4">
+            <div className="flex items-center justify-end gap-2 mb-4">
+              <div className="flex items-center gap-2">
+                <div className="w-4 h-4 border border-[#d3d3d3] rounded"></div>
+                <span 
+                  className="text-[#505050]"
+                  style={{ fontFamily: 'Pretendard', fontWeight: 400, fontSize: '12px', letterSpacing: '0px', lineHeight: '14px' }}
+                >
+                  예약가능
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-4 h-4 bg-[#f6f6f6] rounded"></div>
+                <span 
+                  className="text-[#505050]"
+                  style={{ fontFamily: 'Pretendard', fontWeight: 400, fontSize: '12px', letterSpacing: '0px', lineHeight: '14px' }}
+                >
+                  예약불가
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-4 h-4 bg-[#121212] rounded"></div>
+                <span 
+                  className="text-[#505050]"
+                  style={{ fontFamily: 'Pretendard', fontWeight: 400, fontSize: '12px', letterSpacing: '0px', lineHeight: '14px' }}
+                >
+                  선택
+                </span>
+              </div>
             </div>
           </div>
+          
+          <TimeSlotGrid 
+            selectedSlots={selectedTimeSlots}
+            onSlotSelect={handleTimeSlotSelect}
+            bookedSlots={bookedTimeSlots}
+            loading={loading}
+          />
         </div>
 
         {/* 예약자 입력 */}

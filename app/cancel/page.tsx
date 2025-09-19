@@ -328,7 +328,7 @@ export default function CancelPage() {
                     paddingRight: '20px' // 날짜 필드와 동일한 패딩
                   }}
                 >
-                  <div className="text-left flex items-center h-full">
+                  <div className="flex items-center justify-between h-full">
                     <p 
                       className={`${
                         selectedReservations.some(selected => selected.id === reservation.id) ? 'text-[#19973c]' : 'text-[#121212]'
@@ -343,6 +343,17 @@ export default function CancelPage() {
                     >
                       {reservation.time} / {reservation.reserver_name}
                     </p>
+                    <div className="w-6 h-6 flex items-center justify-center">
+                      {selectedReservations.some(selected => selected.id === reservation.id) ? (
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <path d="M18 8L10.364 16L6 12" stroke="#19973C" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
+                      ) : (
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <path d="M18 8L10.364 16L6 12" stroke="#707070" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
+                      )}
+                    </div>
                   </div>
                 </button>
               ))
