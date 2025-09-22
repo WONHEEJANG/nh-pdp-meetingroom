@@ -50,13 +50,16 @@ export default function Home() {
   const handleDateSelect = (date: Date) => {
     setSelectedDate(date)
     
-    // 회의실 탭으로 스크롤 애니메이션
+    // 회의실 탭으로 스크롤 애니메이션 (위에 50px 여백)
     setTimeout(() => {
       const roomTabsElement = document.getElementById('room-tabs')
       if (roomTabsElement) {
-        roomTabsElement.scrollIntoView({ 
-          behavior: 'smooth', 
-          block: 'start' 
+        const elementTop = roomTabsElement.offsetTop
+        const scrollPosition = elementTop - 50 // 50px 여백
+        
+        window.scrollTo({
+          top: scrollPosition,
+          behavior: 'smooth'
         })
       }
     }, 100)
@@ -66,10 +69,6 @@ export default function Home() {
     setSelectedRoom(roomNumber)
   }
 
-
-  const handleBack = () => {
-    console.log('뒤로가기')
-  }
 
   const handleHome = () => {
     console.log('홈')
@@ -105,9 +104,9 @@ export default function Home() {
     <div className="min-h-screen bg-white w-full max-w-md mx-auto px-6 pt-[50px] pb-32">
       {/* Header */}
       <Header 
-        onBack={handleBack}
         onHome={handleHome}
         onMenu={handleMenu}
+        title="예약현황"
       />
 
       {/* Main Content */}
@@ -118,35 +117,43 @@ export default function Home() {
           onDateSelect={handleDateSelect}
         />
 
-        {/* Room Tabs */}
-        <div id="room-tabs">
-          <RoomTabs 
+        {/* Room Tabs - 날짜 선택 시에만 표시 */}
+        {selectedDate && (
+          <div id="room-tabs">
+            <RoomTabs 
+              selectedRoom={selectedRoom}
+              onRoomSelect={handleRoomSelect}
+            />
+          </div>
+        )}
+
+        {/* Room Info - 날짜 선택 시에만 표시 */}
+        {selectedDate && (
+          <RoomInfo 
             selectedRoom={selectedRoom}
-            onRoomSelect={handleRoomSelect}
           />
-        </div>
+        )}
 
-        {/* Room Info */}
-        <RoomInfo 
-          selectedRoom={selectedRoom}
-        />
-
-        {/* Reservation Status */}
-        <ReservationStatus 
-          reservations={reservations}
-          selectedDate={selectedDate}
-          selectedRoom={selectedRoom}
-          loading={loading}
-        />
+        {/* Reservation Status - 날짜 선택 시에만 표시 */}
+        {selectedDate && (
+          <ReservationStatus 
+            reservations={reservations}
+            selectedDate={selectedDate}
+            selectedRoom={selectedRoom}
+            loading={loading}
+          />
+        )}
 
       </div>
 
-      {/* Action Buttons - Fixed at bottom */}
-      <ActionButtons 
-        onCancel={handleCancel}
-        onConfirm={handleConfirm}
-        disabled={!selectedDate}
-      />
+      {/* Action Buttons - 날짜 선택 시에만 표시 */}
+      {selectedDate && (
+        <ActionButtons 
+          onCancel={handleCancel}
+          onConfirm={handleConfirm}
+          disabled={!selectedDate}
+        />
+      )}
     </div>
   )
 }

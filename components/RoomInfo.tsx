@@ -11,15 +11,15 @@ const RoomInfo: React.FC<RoomInfoProps> = ({ selectedRoom }) => {
   const roomData = {
     1: {
       capacity: 10,
-      features: ['영상기기 연결 지원', '화이트보드', '프로젝터']
+      features: ['인증센터 방향 가장 끝 회의실', '화이트보드']
     },
     2: {
       capacity: 6,
-      features: ['영상기기 연결 지원', '화이트보드']
+      features: ['인증센터 탕비실 방향 회의실', '화이트보드']
     },
     3: {
       capacity: 4,
-      features: ['영상기기 연결 지원', '소형 회의용']
+      features: ['전략반 앞 탕비실 방향', '소형 회의용']
     }
   }
 

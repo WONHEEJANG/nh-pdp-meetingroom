@@ -3,6 +3,11 @@
 import React, { useState, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { reservationService, Reservation } from '@/lib/supabase'
+import Header from '@/components/Header'
+import RoomTabs from '@/components/RoomTabs'
+import PasswordInput from '@/components/PasswordInput'
+import ActionButtons from '@/components/ActionButtons'
+import Modal from '@/components/Modal'
 import Calendar from '@/components/Calendar'
 
 interface CancelData {
@@ -59,7 +64,7 @@ export default function CancelPage() {
   // 예약된 시간 슬롯 계산 (홈 페이지와 동일한 로직)
   const calculateBookedTimeSlots = (reservations: any[], room: number, date: Date) => {
     const roomName = `회의실 ${room}`
-    const dateStr = date.toISOString().split('T')[0] // YYYY-MM-DD 형식
+    const dateStr = `${date.getFullYear()}. ${date.getMonth() + 1}. ${date.getDate()}.` // "2025. 9. 22." 형식
     
     return reservations
       .filter(reservation => 
@@ -110,31 +115,9 @@ export default function CancelPage() {
   const filteredReservations = reservations.filter(reservation => {
     if (!selectedDate) return false
     
-    // Supabase 날짜 형식: "2025. 9. 16." -> "2025-09-16"로 변환
-    const formatSupabaseDate = (dateStr: string) => {
-      try {
-        // "2025. 9. 16." -> "2025 9 16" -> ["2025", "9", "16"]
-        const cleaned = dateStr.replace(/\./g, '').trim()
-        const parts = cleaned.split(/\s+/)
-        
-        if (parts.length === 3) {
-          const year = parts[0]
-          const month = parts[1].padStart(2, '0')
-          const day = parts[2].padStart(2, '0')
-          return `${year}-${month}-${day}`
-        }
-        
-        return dateStr
-      } catch (error) {
-        console.error('날짜 변환 오류:', error, '원본:', dateStr)
-        return dateStr
-      }
-    }
-    
-    // 로컬 시간대 기준으로 YYYY-MM-DD 형식 생성
-    const selectedDateStr = `${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, '0')}-${String(selectedDate.getDate()).padStart(2, '0')}`
-    const reservationDateStr = formatSupabaseDate(reservation.date)
-    const isSameDate = selectedDateStr === reservationDateStr
+    // 선택된 날짜를 "2025. 9. 22." 형식으로 변환
+    const selectedDateStr = `${selectedDate.getFullYear()}. ${selectedDate.getMonth() + 1}. ${selectedDate.getDate()}.`
+    const isSameDate = reservation.date === selectedDateStr
     const isSameRoom = reservation.room === `회의실 ${selectedRoom}`
     
     return isSameDate && isSameRoom
@@ -149,7 +132,7 @@ export default function CancelPage() {
     setSelectedDate(date)
     setSelectedReservations([]) // 날짜 변경 시 선택된 예약 초기화
     setSelectedTimeSlots([]) // 날짜 변경 시 선택된 시간 슬롯 초기화
-    setShowDatePicker(false) // 날짜 선택 후 바텀시트 닫기
+    // 바텀시트는 닫지 않고 확인 버튼을 눌러야 닫힘
   }
 
   const handleDateInputClick = () => {
@@ -267,30 +250,15 @@ export default function CancelPage() {
 
   const formatDate = (date: Date) => {
     const year = date.getFullYear()
-    const month = String(date.getMonth() + 1).padStart(2, '0')
-    const day = String(date.getDate()).padStart(2, '0')
-    return `${year}.${month}.${day}`
+    const month = date.getMonth() + 1
+    const day = date.getDate()
+    return `${year}. ${month}. ${day}.`
   }
 
   return (
     <div className="min-h-screen bg-white w-full max-w-md mx-auto px-6 pt-[50px] pb-32">
       {/* Header */}
-      <div className="w-full bg-white flex items-center justify-between px-6 fixed top-0 left-0 right-0 z-10" style={{ height: '50px' }}>
-        <button 
-          onClick={handleBack}
-          className="w-6 h-6 flex items-center justify-center"
-        >
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M15 18L9 12L15 6" stroke="#121212" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-          </svg>
-        </button>
-        
-        <h1 className="text-base font-semibold text-[#121212] leading-6 tracking-[-0.32px]" style={{ fontFamily: 'Pretendard', fontWeight: 600, fontSize: '16px', letterSpacing: '-0.32px', lineHeight: '24px' }}>
-          예약 취소
-        </h1>
-        
-        <div className="w-6 h-6"></div>
-      </div>
+      <Header onBack={handleBack} />
 
       {/* Main Content */}
       <div className="flex flex-col">
@@ -332,35 +300,13 @@ export default function CancelPage() {
         </div>
 
         {/* Room Selection */}
-        <div className="mb-6">
-          <div className="flex gap-0" style={{ height: '48px' }}>
-            {[1, 2, 3].map((room) => (
-              <button
-                key={room}
-                onClick={() => handleRoomSelect(room)}
-                className={`flex-1 flex items-center justify-center border-b-2 transition-colors ${
-                  selectedRoom === room
-                    ? 'border-[#111111] text-[#121212]'
-                    : 'border-transparent text-[#505050]'
-                }`}
-                style={{ height: '48px' }}
-              >
-                <span 
-                  className="text-base"
-                  style={{ 
-                    fontFamily: 'Pretendard', 
-                    fontWeight: selectedRoom === room ? 600 : 400, 
-                    fontSize: '16px', 
-                    letterSpacing: '-0.32px', 
-                    lineHeight: '24px' 
-                  }}
-                >
-                  회의실 {room}
-                </span>
-              </button>
-            ))}
-          </div>
-        </div>
+        <RoomTabs 
+          selectedRoom={selectedRoom}
+          onRoomSelect={handleRoomSelect}
+        />
+
+        {/* Spacing between Room Tabs and Reservation List */}
+        <div className="mb-6"></div>
 
         {/* Reservation List */}
         <div className="mb-6">
@@ -433,60 +379,24 @@ export default function CancelPage() {
         </div>
 
         {/* Password Input */}
-        <div className="mb-6">
-          <div className="mb-2">
-            <span 
-              className="text-[#505050]"
-              style={{ fontFamily: 'Pretendard', fontWeight: 500, fontSize: '14px', letterSpacing: '-0.28px', lineHeight: '22px' }}
-            >
-              비밀번호
-            </span>
-          </div>
-          <div className="w-full bg-white border border-[#e1e1e1] rounded-xl" style={{ height: '54px', paddingLeft: '20px', paddingRight: '20px' }}>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  handleSubmit()
-                }
-              }}
-              placeholder="4자리 숫자 입력"
-              inputMode="numeric"
-              pattern="[0-9]*"
-              className="w-full h-full text-[#121212] placeholder-[#929292] focus:outline-none bg-white"
-              style={{ fontFamily: 'Pretendard', fontWeight: 500, fontSize: '18px', letterSpacing: '-0.36px', lineHeight: '26px' }}
-            />
-          </div>
-        </div>
+        <PasswordInput
+          value={password}
+          onChange={setPassword}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') {
+              handleSubmit()
+            }
+          }}
+        />
       </div>
 
       {/* Action Button - Fixed at bottom */}
-      <div className="w-full bg-white fixed bottom-0 left-0 right-0 z-10">
-        <div className="w-full bg-gradient-to-r from-white to-transparent" style={{ height: '1px' }}></div>
-        <div className="w-full bg-gradient-to-b from-white to-transparent flex items-center justify-center py-6 px-6">
-          <button
-            onClick={handleSubmit}
-            disabled={isSubmitting || selectedTimeSlots.length === 0 || password.length !== 4}
-            className={`w-full rounded-xl transition-colors touch-manipulation ${
-              isSubmitting || selectedTimeSlots.length === 0 || password.length !== 4
-                ? 'bg-[#cccccc] text-[#666666] cursor-not-allowed'
-                : 'bg-[#19973c] text-white hover:bg-[#15803d] active:bg-[#166534]'
-            }`}
-            style={{ 
-              fontFamily: 'Pretendard', 
-              fontWeight: 500, 
-              fontSize: '18px', 
-              letterSpacing: '-0.36px', 
-              lineHeight: '26px',
-              height: '56px'
-            }}
-          >
-            {isSubmitting ? '취소 중' : '예약 취소'}
-          </button>
-        </div>
-      </div>
+      <ActionButtons
+        onConfirm={handleSubmit}
+        disabled={isSubmitting || selectedTimeSlots.length === 0 || password.length !== 4}
+        confirmText={isSubmitting ? '취소 중' : '예약 취소'}
+        showCancel={false}
+      />
 
       {/* Date Picker Bottom Sheet */}
       {showDatePicker && (
@@ -543,42 +453,21 @@ export default function CancelPage() {
       )}
 
       {/* Password Error Modal */}
-      {showPasswordErrorModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-2xl mx-6" style={{ width: '312px' }}>
-            {/* Contents */}
-            <div className="px-6 pb-6 pt-10">
-              {/* Text */}
-              <div className="text-left" style={{ marginBottom: '32px' }}>
-                <p 
-                  className="text-[#121212]"
-                  style={{ fontFamily: 'Pretendard', fontWeight: 400, fontSize: '15px', letterSpacing: '-0.3px', lineHeight: '24px' }}
-                >
-                  비밀번호가 일치하지 않습니다.<br />
-                  다시 입력해 주세요.
-                </p>
-              </div>
-
-              {/* CTA Button */}
-              <button
-                onClick={handlePasswordErrorModalClose}
-                className="w-full bg-white border border-[#19973c] text-[#19973c] rounded-xl transition-colors touch-manipulation flex items-center justify-center"
-                style={{ 
-                  fontFamily: 'Pretendard', 
-                  fontWeight: 500, 
-                  fontSize: '16px', 
-                  letterSpacing: '-0.32px', 
-                  lineHeight: '24px',
-                  height: '48px',
-                  minHeight: '48px'
-                }}
-              >
-                확인
-              </button>
-            </div>
-          </div>
+      <Modal
+        isOpen={showPasswordErrorModal}
+        onClose={handlePasswordErrorModalClose}
+        showCloseButton={true}
+      >
+        <div className="text-left" style={{ marginBottom: '20px' }}>
+          <p 
+            className="text-[#121212]"
+            style={{ fontFamily: 'Pretendard', fontWeight: 400, fontSize: '15px', letterSpacing: '-0.3px', lineHeight: '24px' }}
+          >
+            비밀번호가 일치하지 않습니다.<br />
+            다시 입력해 주세요.
+          </p>
         </div>
-      )}
+      </Modal>
     </div>
   )
 }
