@@ -38,6 +38,7 @@ const PasswordInput: React.FC<PasswordInputProps> = ({
           placeholder={placeholder}
           inputMode="numeric"
           pattern="[0-9]*"
+          maxLength={4}
           className="w-full h-full text-[#121212] placeholder-[#929292] focus:outline-none bg-white"
           style={{ fontFamily: 'Pretendard', fontWeight: 500, fontSize: '18px', letterSpacing: '-0.36px', lineHeight: '26px' }}
         />

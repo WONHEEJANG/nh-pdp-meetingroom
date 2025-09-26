@@ -11,15 +11,15 @@ const RoomInfo: React.FC<RoomInfoProps> = ({ selectedRoom }) => {
   const roomData = {
     1: {
       capacity: 10,
-      features: ['인증센터 방향 가장 끝 회의실', '화이트보드']
+      features: ['인증센터 방향 가장 끝 회의실']
     },
     2: {
-      capacity: 6,
-      features: ['인증센터 탕비실 방향 회의실', '화이트보드']
+      capacity: 10,
+      features: ['인증센터 탕비실 방향 회의실']
     },
     3: {
-      capacity: 4,
-      features: ['전략반 앞 탕비실 방향', '소형 회의용']
+      capacity: 10,
+      features: ['전략반 앞 탕비실 방향']
     }
   }
 
@@ -28,17 +28,17 @@ const RoomInfo: React.FC<RoomInfoProps> = ({ selectedRoom }) => {
   return (
     <div className="w-full" style={{ paddingTop: '16px', paddingBottom: '16px' }}>
       {/* Info Box */}
-      <div className="w-full bg-[#f6f6f6] rounded-2xl p-4 mb-6 flex items-center" style={{ height: '62px' }}>
+      <div className="w-full bg-[#f6f6f6] rounded-2xl p-4 flex items-center" style={{ height: '62px' }}>
         <p 
           className="text-[#505050]"
           style={{ fontFamily: 'Pretendard', fontWeight: 400, fontSize: '14px', letterSpacing: '-0.28px', lineHeight: '22px', wordBreak: 'keep-all' }}
         >
-          수용인원 최대 {currentRoom.capacity}명, {currentRoom.features.join(', ')}
+          수용인원 : {currentRoom.capacity}명<br/>{currentRoom.features.join(', ')}
         </p>
       </div>
 
-      {/* Legend */}
-      <div className="flex items-center justify-end mb-4" style={{ height: '24px' }}>
+      {/* Legend - 주석처리됨 (홈 화면에서는 불필요) */}
+      {/* <div className="flex items-center justify-end mb-4" style={{ height: '24px' }}>
         <div className="flex items-center gap-3 sm:gap-6 flex-wrap">
           <div className="flex items-center gap-2">
             <div className="w-3 h-3 bg-white border border-[#d3d3d3] rounded-sm flex-shrink-0"></div>
@@ -68,7 +68,7 @@ const RoomInfo: React.FC<RoomInfoProps> = ({ selectedRoom }) => {
             </span>
           </div>
         </div>
-      </div>
+      </div> */}
     </div>
   )
 }

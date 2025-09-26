@@ -27,8 +27,8 @@ const ReservationStatus: React.FC<ReservationStatusProps> = ({
   })
 
   // 시간을 30분 단위로 파싱하여 개별 슬롯으로 변환
-  const parseTimeSlots = (timeRange: string, reserverName: string) => {
-    const slots: { time: string, reserver: string }[] = []
+  const parseTimeSlots = (timeRange: string, reserverName: string, purpose: string) => {
+    const slots: { time: string, reserver: string, purpose: string }[] = []
     
     const ranges = timeRange.split(',').map(range => range.trim())
     
@@ -42,7 +42,8 @@ const ReservationStatus: React.FC<ReservationStatusProps> = ({
         for (let minutes = startMinutes; minutes < endMinutes; minutes += 30) {
           slots.push({
             time: `${minutesToTime(minutes)}~${minutesToTime(minutes + 30)}`,
-            reserver: reserverName
+            reserver: reserverName,
+            purpose: purpose
           })
         }
       }
@@ -64,7 +65,7 @@ const ReservationStatus: React.FC<ReservationStatusProps> = ({
 
   // 예약 데이터를 30분 단위 슬롯으로 변환하고 시간순으로 정렬
   const reservationList = filteredReservations
-    .flatMap(reservation => parseTimeSlots(reservation.time, reservation.reserver_name))
+    .flatMap(reservation => parseTimeSlots(reservation.time, reservation.reserver_name, reservation.purpose))
     .sort((a, b) => a.time.localeCompare(b.time))
 
   if (loading) {
@@ -118,7 +119,7 @@ const ReservationStatus: React.FC<ReservationStatusProps> = ({
                 className="text-[#121212] text-right"
                 style={{ fontFamily: 'Pretendard', fontWeight: 500, fontSize: '15px', letterSpacing: '-0.3px', lineHeight: '20px' }}
               >
-                {reservation.reserver}
+                {reservation.purpose} / {reservation.reserver}
               </span>
             </div>
           ))

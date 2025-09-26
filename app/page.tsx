@@ -46,6 +46,19 @@ export default function Home() {
     return () => window.removeEventListener('focus', handleFocus)
   }, [])
 
+  // 캘린더 렌더링 후 0.5초 뒤에 오늘 날짜 자동 선택
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (!selectedDate) {
+        const today = new Date()
+        today.setHours(0, 0, 0, 0) // 시간을 00:00:00으로 설정
+        handleDateSelect(today)
+      }
+    }, 300) // 0.3초 후
+
+    return () => clearTimeout(timer)
+  }, []) // 빈 의존성 배열로 컴포넌트 마운트 시에만 실행
+
 
   const handleDateSelect = (date: Date) => {
     setSelectedDate(date)

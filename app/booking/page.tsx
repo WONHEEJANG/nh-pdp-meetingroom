@@ -459,6 +459,7 @@ export default function BookingPage() {
                      value={purpose}
                      onChange={(e) => setPurpose(e.target.value)}
                      placeholder="팀 회의"
+                     maxLength={10}
                      className="w-full h-full text-[#121212] placeholder-[#929292] focus:outline-none bg-white"
                      style={{ fontFamily: 'Pretendard', fontWeight: 500, fontSize: '18px', letterSpacing: '-0.36px', lineHeight: '26px' }}
                    />
