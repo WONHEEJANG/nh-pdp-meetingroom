@@ -176,7 +176,7 @@ export default function CancelPage() {
   }
 
   const handleBack = () => {
-    router.back()
+    router.push('/')
   }
 
   const handleSubmit = async () => {

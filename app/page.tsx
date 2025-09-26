@@ -59,26 +59,6 @@ export default function Home() {
     return () => clearTimeout(timer)
   }, []) // 빈 의존성 배열로 컴포넌트 마운트 시에만 실행
 
-  // Prevent back button on Android
-  useEffect(() => {
-    const handlePopState = (event: PopStateEvent) => {
-      // Prevent default back behavior
-      event.preventDefault()
-      // Push current state to prevent back navigation
-      window.history.pushState(null, '', window.location.href)
-    }
-
-    // Add event listener
-    window.addEventListener('popstate', handlePopState)
-    
-    // Push initial state to prevent back navigation
-    window.history.pushState(null, '', window.location.href)
-
-    // Cleanup
-    return () => {
-      window.removeEventListener('popstate', handlePopState)
-    }
-  }, [])
 
 
   const handleDateSelect = (date: Date) => {

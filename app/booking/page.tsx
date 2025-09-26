@@ -205,7 +205,7 @@ export default function BookingPage() {
   }
 
   const handleBack = () => {
-    router.back()
+    router.push('/')
   }
 
   const handleDateInputClick = () => {
