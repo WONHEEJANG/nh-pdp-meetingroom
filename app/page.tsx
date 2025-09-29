@@ -99,7 +99,7 @@ export default function Home() {
 
   const handleConfirm = () => {
     if (selectedDate) {
-      // 예약 정보를 URL 파라미터로 전달하여 /booking 페이지로 이동
+      // 예약 정보를 URL 파라미터로 전달하여 /booking/step1 페이지로 이동
       const roomName = `회의실 ${selectedRoom}`
       const dateStr = `${selectedDate.getFullYear()}. ${selectedDate.getMonth() + 1}. ${selectedDate.getDate()}.`
       
@@ -108,7 +108,7 @@ export default function Home() {
         date: dateStr
       })
       
-      router.push(`/booking?${params.toString()}`)
+      router.push(`/booking/step1?${params.toString()}`)
     }
   }
 
