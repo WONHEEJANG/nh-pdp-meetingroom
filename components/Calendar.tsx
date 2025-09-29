@@ -9,9 +9,13 @@ interface CalendarProps {
 
 const Calendar: React.FC<CalendarProps> = ({ selectedDate, onDateSelect }) => {
   const [currentMonth, setCurrentMonth] = useState(new Date()) // 현재 날짜 기준
-  const today = new Date()
-  // 오늘 날짜의 시작 시간으로 설정 (00:00:00)
-  today.setHours(0, 0, 0, 0)
+  
+  // 오늘 날짜를 매번 새로 계산
+  const getToday = () => {
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    return today
+  }
 
   const getDaysInMonth = (date: Date) => {
     const year = date.getFullYear()
@@ -42,6 +46,7 @@ const Calendar: React.FC<CalendarProps> = ({ selectedDate, onDateSelect }) => {
       // 날짜 비교를 위해 시간을 00:00:00으로 설정
       date.setHours(0, 0, 0, 0)
       
+      const today = getToday()
       const isToday = date.toDateString() === today.toDateString()
       const isSelected = selectedDate && date.toDateString() === selectedDate.toDateString()
       const isWeekend = date.getDay() === 0 || date.getDay() === 6
@@ -79,7 +84,7 @@ const Calendar: React.FC<CalendarProps> = ({ selectedDate, onDateSelect }) => {
       // 날짜 비교를 위해 시간을 00:00:00으로 설정
       date.setHours(0, 0, 0, 0)
       // 오늘 날짜 이전은 선택할 수 없도록 제한
-      if (date >= today) {
+      if (date >= getToday()) {
         onDateSelect(date)
       }
     }
@@ -88,7 +93,7 @@ const Calendar: React.FC<CalendarProps> = ({ selectedDate, onDateSelect }) => {
   const goToToday = () => {
     setCurrentMonth(new Date())
     if (onDateSelect) {
-      onDateSelect(today)
+      onDateSelect(getToday())
     }
   }
 
