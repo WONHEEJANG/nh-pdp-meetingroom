@@ -14,6 +14,13 @@ export default function BookingStep1Page() {
   const router = useRouter()
   const searchParams = useSearchParams()
   
+  // 오늘 날짜를 컴포넌트 마운트 시 한 번만 계산하고 고정
+  const [today] = useState(() => {
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    return today
+  })
+  
   // URL에서 전달받은 초기값 설정
   const initialRoom = searchParams.get('room') || '회의실 1'
   const initialDate = searchParams.get('date') || ''
@@ -36,7 +43,7 @@ export default function BookingStep1Page() {
         return new Date(year, month, day)
       }
     }
-    return new Date()
+    return today
   })
   const [showDatePicker, setShowDatePicker] = useState(false)
   
@@ -318,6 +325,7 @@ export default function BookingStep1Page() {
               <Calendar 
                 selectedDate={selectedDate}
                 onDateSelect={handleDateSelect}
+                today={today}
               />
             </div>
 

@@ -12,6 +12,12 @@ import { reservationService, Reservation } from '@/lib/supabase'
 
 export default function Home() {
   const router = useRouter()
+  // 오늘 날짜를 컴포넌트 마운트 시 한 번만 계산하고 고정
+  const [today] = useState(() => {
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    return today
+  })
   const [selectedDate, setSelectedDate] = useState<Date | null>(null) // 초기에는 선택된 날짜 없음
   const [selectedRoom, setSelectedRoom] = useState<number>(1)
   const [reservations, setReservations] = useState<Reservation[]>([])
@@ -50,14 +56,13 @@ export default function Home() {
   useEffect(() => {
     const timer = setTimeout(() => {
       if (!selectedDate) {
-        const today = new Date()
-        today.setHours(0, 0, 0, 0) // 시간을 00:00:00으로 설정
+        // 고정된 오늘 날짜 사용
         handleDateSelect(today)
       }
     }, 300) // 0.3초 후
 
     return () => clearTimeout(timer)
-  }, []) // 빈 의존성 배열로 컴포넌트 마운트 시에만 실행
+  }, [today]) // today를 의존성에 추가
 
 
 
@@ -129,6 +134,7 @@ export default function Home() {
         <Calendar 
           selectedDate={selectedDate}
           onDateSelect={handleDateSelect}
+          today={today}
         />
 
         {/* Room Tabs - 날짜 선택 시에만 표시 */}
